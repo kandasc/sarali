@@ -132,6 +132,29 @@ export default defineSchema({
     .index("by_master", ["masterUserId"])
     .index("by_target", ["targetUserId"]),
 
+  billers: defineTable({
+    name: v.string(),
+    code: v.string(),
+    category: v.union(
+      v.literal("ELECTRICITY"),
+      v.literal("WATER"),
+      v.literal("INTERNET"),
+      v.literal("PHONE"),
+      v.literal("TV"),
+      v.literal("OTHER")
+    ),
+    logoStorageId: v.optional(v.id("_storage")),
+    description: v.optional(v.string()),
+    isActive: v.boolean(),
+    supportedCurrencies: v.array(v.union(v.literal("XOF"), v.literal("GNF"))),
+    countries: v.array(v.string()),
+    feePercentage: v.optional(v.number()),
+    feeFixed: v.optional(v.number()),
+  })
+    .index("by_code", ["code"])
+    .index("by_category", ["category"])
+    .index("by_active", ["isActive"]),
+
   billPayments: defineTable({
     billType: v.union(
       v.literal("ELECTRICITY"),
@@ -142,6 +165,7 @@ export default defineSchema({
       v.literal("OTHER")
     ),
     provider: v.string(),
+    billerId: v.optional(v.id("billers")),
     billReference: v.string(),
     accountNumber: v.optional(v.string()),
     customerName: v.string(),

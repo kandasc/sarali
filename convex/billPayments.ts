@@ -26,6 +26,7 @@ export const initiateBillPayment = mutation({
       v.literal("OTHER")
     ),
     provider: v.string(),
+    billerId: v.optional(v.id("billers")),
     billReference: v.string(),
     accountNumber: v.optional(v.string()),
     customerName: v.string(),
@@ -43,8 +44,20 @@ export const initiateBillPayment = mutation({
       });
     }
 
-    // Calculate fees and total
-    const fees = calculateFees(args.amount);
+    // Get biller info if provided
+    let fees = calculateFees(args.amount);
+    if (args.billerId) {
+      const biller = await ctx.db.get(args.billerId);
+      if (biller) {
+        // Calculate fees based on biller settings
+        const percentageFee = biller.feePercentage
+          ? Math.round((args.amount * biller.feePercentage) / 100)
+          : 0;
+        const fixedFee = biller.feeFixed || 0;
+        fees = percentageFee + fixedFee;
+      }
+    }
+
     const totalAmount = args.amount + fees;
 
     // Generate payment reference
@@ -54,6 +67,7 @@ export const initiateBillPayment = mutation({
     const paymentId = await ctx.db.insert("billPayments", {
       billType: args.billType,
       provider: args.provider,
+      billerId: args.billerId,
       billReference: args.billReference,
       accountNumber: args.accountNumber,
       customerName: args.customerName,
