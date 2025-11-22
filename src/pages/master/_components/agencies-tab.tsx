@@ -3,8 +3,10 @@ import { api } from "@/convex/_generated/api.js";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Building2, Plus, MapPin, Users, Wallet } from "lucide-react";
+import { Building2, Plus, MapPin, Users, Wallet, Eye } from "lucide-react";
 import { useState } from "react";
+import type { Id } from "@/convex/_generated/dataModel.d.ts";
+import AgencyDetail from "./agency-detail.tsx";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +51,7 @@ export default function AgenciesTab() {
   const agencies = useQuery(api.agencies.listAgencies, {});
   const createAgency = useMutation(api.agencies.createAgency);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [selectedAgencyId, setSelectedAgencyId] = useState<Id<"agencies"> | null>(null);
 
   const form = useForm<CreateAgencyFormData>({
     resolver: zodResolver(createAgencySchema),
@@ -93,6 +96,16 @@ export default function AgenciesTab() {
         <Skeleton className="h-20 w-full" />
         <Skeleton className="h-20 w-full" />
       </div>
+    );
+  }
+
+  // Show agency detail if one is selected
+  if (selectedAgencyId) {
+    return (
+      <AgencyDetail
+        agencyId={selectedAgencyId}
+        onBack={() => setSelectedAgencyId(null)}
+      />
     );
   }
 
@@ -327,6 +340,15 @@ export default function AgenciesTab() {
                   </span>
                 </div>
               </div>
+
+              <Button
+                variant="secondary"
+                className="w-full mt-3"
+                onClick={() => setSelectedAgencyId(agency._id)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Voir détails
+              </Button>
             </CardContent>
           </Card>
         ))}
