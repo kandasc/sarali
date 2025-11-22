@@ -1,20 +1,21 @@
 import { Authenticated } from "convex/react";
 import DashboardLayout from "@/components/dashboard-layout.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { Users, Building2, Wallet, Activity, LayoutDashboard, BarChart3 } from "lucide-react";
+import { Users, Building2, Wallet, Activity, LayoutDashboard, BarChart3, FileStack } from "lucide-react";
 import DashboardTab from "./_components/dashboard-tab.tsx";
 import UsersTab from "./_components/users-tab.tsx";
 import AgenciesTab from "./_components/agencies-tab.tsx";
 import CreditsTab from "./_components/credits-tab.tsx";
 import ActivityTab from "./_components/activity-tab.tsx";
 import ReportsTab from "./_components/reports-tab.tsx";
+import BulkPaymentsTab from "./_components/bulk-payments-tab.tsx";
 
 export default function MasterDashboard() {
   return (
     <Authenticated>
       <DashboardLayout title="Tableau de bord Master">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4" />
               <span className="hidden sm:inline">Accueil</span>
@@ -22,6 +23,10 @@ export default function MasterDashboard() {
             <TabsTrigger value="reports" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Rapports</span>
+            </TabsTrigger>
+            <TabsTrigger value="bulkPayments" className="flex items-center gap-2">
+              <FileStack className="h-4 w-4" />
+              <span className="hidden sm:inline">Paiements masse</span>
             </TabsTrigger>
             <TabsTrigger value="credits" className="flex items-center gap-2">
               <Wallet className="h-4 w-4" />
@@ -47,6 +52,10 @@ export default function MasterDashboard() {
 
           <TabsContent value="reports">
             <ReportsTab />
+          </TabsContent>
+
+          <TabsContent value="bulkPayments">
+            <BulkPaymentsTab />
           </TabsContent>
 
           <TabsContent value="credits">

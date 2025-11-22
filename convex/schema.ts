@@ -167,4 +167,52 @@ export default defineSchema({
     .index("by_phone", ["customerPhone"])
     .index("by_status", ["status"])
     .index("by_sayele_id", ["sayeleTransactionId"]),
+
+  bulkPayments: defineTable({
+    batchReference: v.string(),
+    fileName: v.string(),
+    fileStorageId: v.optional(v.id("_storage")),
+    totalItems: v.number(),
+    totalAmount: v.number(),
+    currency: v.union(v.literal("XOF"), v.literal("GNF")),
+    processedItems: v.number(),
+    successfulItems: v.number(),
+    failedItems: v.number(),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("PROCESSING"),
+      v.literal("COMPLETED"),
+      v.literal("FAILED"),
+      v.literal("CANCELLED")
+    ),
+    createdBy: v.id("users"),
+    processedAt: v.optional(v.number()),
+  })
+    .index("by_reference", ["batchReference"])
+    .index("by_created_by", ["createdBy"])
+    .index("by_status", ["status"]),
+
+  bulkPaymentItems: defineTable({
+    bulkPaymentId: v.id("bulkPayments"),
+    rowNumber: v.number(),
+    recipientName: v.string(),
+    recipientPhone: v.string(),
+    recipientAccount: v.optional(v.string()),
+    amount: v.number(),
+    currency: v.union(v.literal("XOF"), v.literal("GNF")),
+    reference: v.string(),
+    description: v.optional(v.string()),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("PROCESSING"),
+      v.literal("COMPLETED"),
+      v.literal("FAILED")
+    ),
+    errorMessage: v.optional(v.string()),
+    transactionId: v.optional(v.string()),
+    processedAt: v.optional(v.number()),
+  })
+    .index("by_bulk_payment", ["bulkPaymentId"])
+    .index("by_reference", ["reference"])
+    .index("by_status", ["status"]),
 });
