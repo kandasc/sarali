@@ -11,6 +11,7 @@
 import type * as agencies from "../agencies.js";
 import type * as agenciesStats from "../agenciesStats.js";
 import type * as agencyDashboard from "../agencyDashboard.js";
+import type * as analytics from "../analytics.js";
 import type * as cashierDashboard from "../cashierDashboard.js";
 import type * as credits from "../credits.js";
 import type * as ocr from "../ocr.js";
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   agencies: typeof agencies;
   agenciesStats: typeof agenciesStats;
   agencyDashboard: typeof agencyDashboard;
+  analytics: typeof analytics;
   cashierDashboard: typeof cashierDashboard;
   credits: typeof credits;
   ocr: typeof ocr;
