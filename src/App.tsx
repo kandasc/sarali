@@ -1,5 +1,15 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Suspense } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+} from "react-router-dom";
 import { DefaultProviders } from "./components/providers/default.tsx";
+import LanguageWrapper from "./components/providers/language-wrapper.tsx";
+import { SAVED_OR_DEFAULT_LANGUAGE, setLanguageInPath } from "./i18n";
+import "./i18n";
 import AuthCallback from "./pages/auth/Callback.tsx";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -14,18 +24,43 @@ export default function App() {
   return (
     <DefaultProviders>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/master" element={<MasterDashboard />} />
-          <Route path="/manager" element={<ManagerDashboard />} />
-          <Route path="/agency" element={<AgencyDashboard />} />
-          <Route path="/cashier" element={<CashierDashboard />} />
-          <Route path="/pay" element={<PublicPaymentPage />} />
-          <Route path="/pay/success" element={<PaymentSuccessPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<div></div>}>
+          <Routes>
+            {/* Root: redirect to saved/default language */}
+            <Route
+              path="/"
+              element={
+                <Navigate
+                  to={setLanguageInPath(SAVED_OR_DEFAULT_LANGUAGE, "/")}
+                  replace
+                />
+              }
+            />
+
+            {/* Non-localized routes (auth, webhooks, etc.) */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
+
+            {/* All localized routes under /:lng */}
+            <Route
+              path="/:lng"
+              element={
+                <LanguageWrapper>
+                  <Outlet />
+                </LanguageWrapper>
+              }
+            >
+              <Route index element={<Index />} />
+              <Route path="master" element={<MasterDashboard />} />
+              <Route path="manager" element={<ManagerDashboard />} />
+              <Route path="agency" element={<AgencyDashboard />} />
+              <Route path="cashier" element={<CashierDashboard />} />
+              <Route path="pay" element={<PublicPaymentPage />} />
+              <Route path="pay/success" element={<PaymentSuccessPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </DefaultProviders>
   );

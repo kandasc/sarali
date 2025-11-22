@@ -24,6 +24,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import LanguageSwitcher from "@/components/ui/language-switcher.tsx";
+import { useTranslation } from "react-i18next";
 
 const paymentSchema = z.object({
   billType: z.enum(["ELECTRICITY", "WATER", "INTERNET", "PHONE", "TV", "OTHER"]),
@@ -58,6 +60,7 @@ const billTypeLabels: Record<string, string> = {
 };
 
 export default function PublicPaymentPage() {
+  const { t } = useTranslation(["payment", "common"]);
   const navigate = useNavigate();
   const [selectedBillType, setSelectedBillType] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -132,12 +135,13 @@ export default function PublicPaymentPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
       <nav className="border-b bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Building2 className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">FinanceHub</span>
-            <span className="ml-2 text-muted-foreground">• Paiement de Factures</span>
+            <span className="text-2xl font-bold">SAYELE Hub</span>
+            <span className="ml-2 text-muted-foreground">• {t("app.billPayment", { ns: "common" })}</span>
           </div>
+          <LanguageSwitcher />
         </div>
       </nav>
 

@@ -14,6 +14,7 @@ import { Building2, CheckCircle, Download, Home } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import LanguageSwitcher from "@/components/ui/language-switcher.tsx";
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
@@ -60,11 +61,12 @@ export default function PaymentSuccessPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <nav className="border-b bg-background/80 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Building2 className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold">FinanceHub</span>
+              <span className="text-2xl font-bold">SAYELE Hub</span>
             </div>
+            <LanguageSwitcher />
           </div>
         </nav>
         <div className="container mx-auto px-4 py-12">
@@ -98,12 +100,13 @@ export default function PaymentSuccessPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
       <nav className="border-b bg-background/80 backdrop-blur-sm print:hidden">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Building2 className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">FinanceHub</span>
+            <span className="text-2xl font-bold">SAYELE Hub</span>
             <span className="ml-2 text-muted-foreground">• Confirmation de Paiement</span>
           </div>
+          <LanguageSwitcher />
         </div>
       </nav>
 
