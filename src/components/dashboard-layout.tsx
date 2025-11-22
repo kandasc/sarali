@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth.ts";
 import { Building2, LogOut, User } from "lucide-react";
 import { Button } from "./ui/button.tsx";
+import { RoleSimulationBanner } from "./role-simulation-banner.tsx";
 import type { ReactNode } from "react";
 
 interface DashboardLayoutProps {
@@ -46,7 +47,10 @@ export default function DashboardLayout({
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">{children}</main>
+      <main className="container mx-auto px-4 py-8">
+        <RoleSimulationBanner />
+        {children}
+      </main>
     </div>
   );
 }

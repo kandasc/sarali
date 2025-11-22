@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
+import { RoleSimulationControls } from "@/components/role-simulation-controls.tsx";
 
 export default function DashboardTab() {
   const globalStats = useQuery(api.agenciesStats.getGlobalStats, {});
@@ -75,6 +76,9 @@ export default function DashboardTab() {
           Voici un aperçu de votre réseau d'agences
         </p>
       </div>
+
+      {/* Role Simulation Controls */}
+      <RoleSimulationControls />
 
       {/* Key Metrics Grid */}
       <div className="grid md:grid-cols-4 gap-4">

@@ -116,4 +116,19 @@ export default defineSchema({
     .index("by_processed_by", ["processedBy"])
     .index("by_agency", ["agencyId"])
     .index("by_status", ["status"]),
+
+  roleSimulations: defineTable({
+    masterUserId: v.id("users"),
+    simulatedRole: v.union(
+      v.literal("MANAGER"),
+      v.literal("CHEF_AGENCE"),
+      v.literal("CAISSIER")
+    ),
+    targetUserId: v.optional(v.id("users")),
+    reason: v.string(),
+    startedAt: v.number(),
+    endedAt: v.optional(v.number()),
+  })
+    .index("by_master", ["masterUserId"])
+    .index("by_target", ["targetUserId"]),
 });

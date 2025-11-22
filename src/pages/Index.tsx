@@ -78,6 +78,7 @@ function LandingPage() {
 
 function DashboardRouter() {
   const currentUser = useQuery(api.users.getCurrentUser);
+  const activeSimulation = useQuery(api.roleSimulation.getActiveSimulation);
 
   if (!currentUser) {
     return (
@@ -85,6 +86,17 @@ function DashboardRouter() {
         <Skeleton className="h-20 w-full max-w-md" />
       </div>
     );
+  }
+
+  // If Master is simulating a role, redirect to that role's dashboard
+  if (currentUser.role === "MASTER" && activeSimulation) {
+    if (activeSimulation.simulatedRole === "MANAGER") {
+      return <Navigate to="/manager" replace />;
+    } else if (activeSimulation.simulatedRole === "CHEF_AGENCE") {
+      return <Navigate to="/agency" replace />;
+    } else if (activeSimulation.simulatedRole === "CAISSIER") {
+      return <Navigate to="/cashier" replace />;
+    }
   }
 
   // Route based on role
