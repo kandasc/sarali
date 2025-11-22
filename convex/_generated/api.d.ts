@@ -10,6 +10,7 @@
 
 import type * as agencies from "../agencies.js";
 import type * as agenciesStats from "../agenciesStats.js";
+import type * as credits from "../credits.js";
 import type * as rbac from "../rbac.js";
 import type * as users from "../users.js";
 
@@ -22,6 +23,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   agencies: typeof agencies;
   agenciesStats: typeof agenciesStats;
+  credits: typeof credits;
   rbac: typeof rbac;
   users: typeof users;
 }>;

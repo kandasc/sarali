@@ -52,4 +52,34 @@ export default defineSchema({
     details: v.optional(v.string()),
     ipAddress: v.optional(v.string()),
   }).index("by_user", ["userId"]),
+
+  creditTransactions: defineTable({
+    type: v.union(
+      v.literal("DEPOSIT"),
+      v.literal("TRANSFER"),
+      v.literal("DEDUCTION"),
+      v.literal("REFUND")
+    ),
+    fromType: v.optional(
+      v.union(v.literal("USER"), v.literal("AGENCY"), v.literal("SYSTEM"))
+    ),
+    fromId: v.optional(v.string()),
+    toType: v.union(v.literal("USER"), v.literal("AGENCY")),
+    toId: v.string(),
+    amount: v.number(),
+    currency: v.union(v.literal("XOF"), v.literal("GNF")),
+    balanceBefore: v.number(),
+    balanceAfter: v.number(),
+    reason: v.optional(v.string()),
+    initiatedBy: v.id("users"),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("COMPLETED"),
+      v.literal("FAILED"),
+      v.literal("CANCELLED")
+    ),
+  })
+    .index("by_initiator", ["initiatedBy"])
+    .index("by_to", ["toId"])
+    .index("by_status", ["status"]),
 });
