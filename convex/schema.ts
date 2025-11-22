@@ -131,4 +131,40 @@ export default defineSchema({
   })
     .index("by_master", ["masterUserId"])
     .index("by_target", ["targetUserId"]),
+
+  billPayments: defineTable({
+    billType: v.union(
+      v.literal("ELECTRICITY"),
+      v.literal("WATER"),
+      v.literal("INTERNET"),
+      v.literal("PHONE"),
+      v.literal("TV"),
+      v.literal("OTHER")
+    ),
+    provider: v.string(),
+    billReference: v.string(),
+    accountNumber: v.optional(v.string()),
+    customerName: v.string(),
+    customerPhone: v.string(),
+    customerEmail: v.optional(v.string()),
+    amount: v.number(),
+    currency: v.union(v.literal("XOF"), v.literal("GNF")),
+    fees: v.number(),
+    totalAmount: v.number(),
+    paymentReference: v.string(),
+    sayeleTransactionId: v.optional(v.string()),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("PROCESSING"),
+      v.literal("COMPLETED"),
+      v.literal("FAILED"),
+      v.literal("CANCELLED")
+    ),
+    errorMessage: v.optional(v.string()),
+    metadata: v.optional(v.string()),
+  })
+    .index("by_reference", ["paymentReference"])
+    .index("by_phone", ["customerPhone"])
+    .index("by_status", ["status"])
+    .index("by_sayele_id", ["sayeleTransactionId"]),
 });
