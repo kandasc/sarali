@@ -72,6 +72,7 @@ export const createDeposit = mutation({
     customerIdNumber: v.optional(v.string()),
     amount: v.number(),
     description: v.optional(v.string()),
+    receiptStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, ["CAISSIER", "CHEF_AGENCE"]);
@@ -102,6 +103,7 @@ export const createDeposit = mutation({
       totalAmount,
       reference,
       description: args.description,
+      receiptStorageId: args.receiptStorageId,
       status: "COMPLETED",
       processedBy: currentUser._id,
       agencyId: currentUser.agencyId,
@@ -134,6 +136,7 @@ export const createWithdrawal = mutation({
     customerIdNumber: v.optional(v.string()),
     amount: v.number(),
     description: v.optional(v.string()),
+    receiptStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, ["CAISSIER", "CHEF_AGENCE"]);
@@ -172,6 +175,7 @@ export const createWithdrawal = mutation({
       totalAmount,
       reference,
       description: args.description,
+      receiptStorageId: args.receiptStorageId,
       status: "COMPLETED",
       processedBy: currentUser._id,
       agencyId: currentUser.agencyId,
@@ -206,6 +210,7 @@ export const createTransfer = mutation({
     recipientPhone: v.string(),
     amount: v.number(),
     description: v.optional(v.string()),
+    receiptStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, ["CAISSIER", "CHEF_AGENCE"]);
@@ -246,6 +251,7 @@ export const createTransfer = mutation({
       totalAmount,
       reference,
       description: args.description,
+      receiptStorageId: args.receiptStorageId,
       status: "COMPLETED",
       processedBy: currentUser._id,
       agencyId: currentUser.agencyId,
@@ -278,6 +284,7 @@ export const createPayment = mutation({
     customerIdNumber: v.optional(v.string()),
     amount: v.number(),
     description: v.string(),
+    receiptStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, ["CAISSIER", "CHEF_AGENCE"]);
@@ -316,6 +323,7 @@ export const createPayment = mutation({
       totalAmount,
       reference,
       description: args.description,
+      receiptStorageId: args.receiptStorageId,
       status: "COMPLETED",
       processedBy: currentUser._id,
       agencyId: currentUser.agencyId,

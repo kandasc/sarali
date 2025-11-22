@@ -101,6 +101,7 @@ export default defineSchema({
     description: v.optional(v.string()),
     recipientName: v.optional(v.string()),
     recipientPhone: v.optional(v.string()),
+    receiptStorageId: v.optional(v.id("_storage")),
     status: v.union(
       v.literal("PENDING"),
       v.literal("COMPLETED"),

@@ -35,6 +35,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
+import { ReceiptScanner } from "./receipt-scanner.tsx";
+import type { Id } from "@/convex/_generated/dataModel.d.ts";
 
 const depositSchema = z.object({
   customerName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -102,6 +104,11 @@ export default function TransactionsModuleTab() {
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
+  const [depositReceiptId, setDepositReceiptId] = useState<Id<"_storage"> | undefined>(undefined);
+  const [withdrawalReceiptId, setWithdrawalReceiptId] = useState<Id<"_storage"> | undefined>(undefined);
+  const [transferReceiptId, setTransferReceiptId] = useState<Id<"_storage"> | undefined>(undefined);
+  const [paymentReceiptId, setPaymentReceiptId] = useState<Id<"_storage"> | undefined>(undefined);
+
   const depositForm = useForm<DepositValues>({
     resolver: zodResolver(depositSchema),
     defaultValues: {
@@ -156,10 +163,12 @@ export default function TransactionsModuleTab() {
         customerIdNumber: values.customerIdNumber,
         amount: Number(values.amount),
         description: values.description,
+        receiptStorageId: depositReceiptId,
       });
 
       toast.success(`Dépôt effectué avec succès. Référence: ${result.reference}`);
       depositForm.reset();
+      setDepositReceiptId(undefined);
       setIsDepositDialogOpen(false);
     } catch (error) {
       if (error instanceof Error) {
@@ -178,10 +187,12 @@ export default function TransactionsModuleTab() {
         customerIdNumber: values.customerIdNumber,
         amount: Number(values.amount),
         description: values.description,
+        receiptStorageId: withdrawalReceiptId,
       });
 
       toast.success(`Retrait effectué avec succès. Référence: ${result.reference}`);
       withdrawalForm.reset();
+      setWithdrawalReceiptId(undefined);
       setIsWithdrawalDialogOpen(false);
     } catch (error) {
       if (error instanceof Error) {
@@ -202,10 +213,12 @@ export default function TransactionsModuleTab() {
         recipientPhone: values.recipientPhone,
         amount: Number(values.amount),
         description: values.description,
+        receiptStorageId: transferReceiptId,
       });
 
       toast.success(`Transfert effectué avec succès. Référence: ${result.reference}`);
       transferForm.reset();
+      setTransferReceiptId(undefined);
       setIsTransferDialogOpen(false);
     } catch (error) {
       if (error instanceof Error) {
@@ -224,10 +237,12 @@ export default function TransactionsModuleTab() {
         customerIdNumber: values.customerIdNumber,
         amount: Number(values.amount),
         description: values.description,
+        receiptStorageId: paymentReceiptId,
       });
 
       toast.success(`Paiement effectué avec succès. Référence: ${result.reference}`);
       paymentForm.reset();
+      setPaymentReceiptId(undefined);
       setIsPaymentDialogOpen(false);
     } catch (error) {
       if (error instanceof Error) {
@@ -270,6 +285,44 @@ export default function TransactionsModuleTab() {
     }
   };
 
+  const handleDepositDataExtracted = (data: { customerName: string; customerPhone: string; customerIdNumber?: string; amount: number; description?: string }, storageId: Id<"_storage">) => {
+    depositForm.setValue("customerName", data.customerName);
+    depositForm.setValue("customerPhone", data.customerPhone);
+    depositForm.setValue("customerIdNumber", data.customerIdNumber || "");
+    depositForm.setValue("amount", data.amount.toString());
+    depositForm.setValue("description", data.description || "");
+    setDepositReceiptId(storageId);
+  };
+
+  const handleWithdrawalDataExtracted = (data: { customerName: string; customerPhone: string; customerIdNumber?: string; amount: number; description?: string }, storageId: Id<"_storage">) => {
+    withdrawalForm.setValue("customerName", data.customerName);
+    withdrawalForm.setValue("customerPhone", data.customerPhone);
+    withdrawalForm.setValue("customerIdNumber", data.customerIdNumber || "");
+    withdrawalForm.setValue("amount", data.amount.toString());
+    withdrawalForm.setValue("description", data.description || "");
+    setWithdrawalReceiptId(storageId);
+  };
+
+  const handleTransferDataExtracted = (data: { customerName: string; customerPhone: string; customerIdNumber?: string; recipientName?: string; recipientPhone?: string; amount: number; description?: string }, storageId: Id<"_storage">) => {
+    transferForm.setValue("customerName", data.customerName);
+    transferForm.setValue("customerPhone", data.customerPhone);
+    transferForm.setValue("customerIdNumber", data.customerIdNumber || "");
+    transferForm.setValue("recipientName", data.recipientName || "");
+    transferForm.setValue("recipientPhone", data.recipientPhone || "");
+    transferForm.setValue("amount", data.amount.toString());
+    transferForm.setValue("description", data.description || "");
+    setTransferReceiptId(storageId);
+  };
+
+  const handlePaymentDataExtracted = (data: { customerName: string; customerPhone: string; customerIdNumber?: string; amount: number; description?: string }, storageId: Id<"_storage">) => {
+    paymentForm.setValue("customerName", data.customerName);
+    paymentForm.setValue("customerPhone", data.customerPhone);
+    paymentForm.setValue("customerIdNumber", data.customerIdNumber || "");
+    paymentForm.setValue("amount", data.amount.toString());
+    paymentForm.setValue("description", data.description || "");
+    setPaymentReceiptId(storageId);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -297,6 +350,7 @@ export default function TransactionsModuleTab() {
             <DialogHeader>
               <DialogTitle>Nouveau Dépôt</DialogTitle>
             </DialogHeader>
+            <ReceiptScanner onDataExtracted={handleDepositDataExtracted} />
             <Form {...depositForm}>
               <form onSubmit={depositForm.handleSubmit(onDepositSubmit)} className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg">
@@ -419,6 +473,7 @@ export default function TransactionsModuleTab() {
             <DialogHeader>
               <DialogTitle>Nouveau Retrait</DialogTitle>
             </DialogHeader>
+            <ReceiptScanner onDataExtracted={handleWithdrawalDataExtracted} />
             <Form {...withdrawalForm}>
               <form onSubmit={withdrawalForm.handleSubmit(onWithdrawalSubmit)} className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg">
@@ -541,6 +596,7 @@ export default function TransactionsModuleTab() {
             <DialogHeader>
               <DialogTitle>Nouveau Transfert</DialogTitle>
             </DialogHeader>
+            <ReceiptScanner onDataExtracted={handleTransferDataExtracted} />
             <Form {...transferForm}>
               <form onSubmit={transferForm.handleSubmit(onTransferSubmit)} className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg">
@@ -697,6 +753,7 @@ export default function TransactionsModuleTab() {
             <DialogHeader>
               <DialogTitle>Nouveau Paiement</DialogTitle>
             </DialogHeader>
+            <ReceiptScanner onDataExtracted={handlePaymentDataExtracted} />
             <Form {...paymentForm}>
               <form onSubmit={paymentForm.handleSubmit(onPaymentSubmit)} className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg">
