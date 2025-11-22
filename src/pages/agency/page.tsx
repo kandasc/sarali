@@ -1,18 +1,45 @@
 import { Authenticated } from "convex/react";
 import DashboardLayout from "@/components/dashboard-layout.tsx";
-import { ConstructionIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import OverviewTab from "./_components/overview-tab.tsx";
+import CashiersTab from "./_components/cashiers-tab.tsx";
+import CreditsTab from "./_components/credits-tab.tsx";
+import TransactionsTab from "./_components/transactions-tab.tsx";
+import ActivityTab from "./_components/activity-tab.tsx";
 
 export default function AgencyDashboard() {
   return (
     <Authenticated>
       <DashboardLayout title="Tableau de bord Chef d'Agence">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-          <ConstructionIcon className="h-16 w-16 text-muted-foreground" />
-          <h2 className="text-2xl font-bold">Interface Chef d'Agence</h2>
-          <p className="text-muted-foreground text-center max-w-md">
-            Cette interface sera disponible dans la milestone "Interface Chef d'agence"
-          </p>
-        </div>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">Accueil</TabsTrigger>
+            <TabsTrigger value="cashiers">Caissiers</TabsTrigger>
+            <TabsTrigger value="credits">Crédits</TabsTrigger>
+            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="activity">Activité</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            <OverviewTab />
+          </TabsContent>
+
+          <TabsContent value="cashiers">
+            <CashiersTab />
+          </TabsContent>
+
+          <TabsContent value="credits">
+            <CreditsTab />
+          </TabsContent>
+
+          <TabsContent value="transactions">
+            <TransactionsTab />
+          </TabsContent>
+
+          <TabsContent value="activity">
+            <ActivityTab />
+          </TabsContent>
+        </Tabs>
       </DashboardLayout>
     </Authenticated>
   );
