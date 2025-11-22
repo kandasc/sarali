@@ -1,17 +1,23 @@
 import { Authenticated } from "convex/react";
 import DashboardLayout from "@/components/dashboard-layout.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { Users, Building2, Wallet, Activity } from "lucide-react";
+import { Users, Building2, Wallet, Activity, LayoutDashboard } from "lucide-react";
+import DashboardTab from "./_components/dashboard-tab.tsx";
 import UsersTab from "./_components/users-tab.tsx";
 import AgenciesTab from "./_components/agencies-tab.tsx";
 import CreditsTab from "./_components/credits-tab.tsx";
+import ActivityTab from "./_components/activity-tab.tsx";
 
 export default function MasterDashboard() {
   return (
     <Authenticated>
       <DashboardLayout title="Tableau de bord Master">
-        <Tabs defaultValue="credits" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="hidden sm:inline">Accueil</span>
+            </TabsTrigger>
             <TabsTrigger value="credits" className="flex items-center gap-2">
               <Wallet className="h-4 w-4" />
               <span className="hidden sm:inline">Crédits</span>
@@ -30,6 +36,10 @@ export default function MasterDashboard() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="dashboard">
+            <DashboardTab />
+          </TabsContent>
+
           <TabsContent value="credits">
             <CreditsTab />
           </TabsContent>
@@ -43,9 +53,7 @@ export default function MasterDashboard() {
           </TabsContent>
 
           <TabsContent value="activity">
-            <div className="text-center py-12 text-muted-foreground">
-              Fonctionnalité à venir dans les prochaines milestones
-            </div>
+            <ActivityTab />
           </TabsContent>
         </Tabs>
       </DashboardLayout>
