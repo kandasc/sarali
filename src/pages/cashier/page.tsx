@@ -2,6 +2,7 @@ import { Authenticated } from "convex/react";
 import DashboardLayout from "@/components/dashboard-layout.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import OverviewTab from "./_components/overview-tab.tsx";
+import TransactionsModuleTab from "./_components/transactions-module-tab.tsx";
 import TransactionsTab from "./_components/transactions-tab.tsx";
 import StatsTab from "./_components/stats-tab.tsx";
 
@@ -10,9 +11,10 @@ export default function CashierDashboard() {
     <Authenticated>
       <DashboardLayout title="Tableau de bord Caissier">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Accueil</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="transactions-module">Transactions</TabsTrigger>
+            <TabsTrigger value="history">Historique</TabsTrigger>
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
           </TabsList>
 
@@ -20,7 +22,11 @@ export default function CashierDashboard() {
             <OverviewTab />
           </TabsContent>
 
-          <TabsContent value="transactions">
+          <TabsContent value="transactions-module">
+            <TransactionsModuleTab />
+          </TabsContent>
+
+          <TabsContent value="history">
             <TransactionsTab />
           </TabsContent>
 

@@ -14,6 +14,7 @@ import type * as agencyDashboard from "../agencyDashboard.js";
 import type * as cashierDashboard from "../cashierDashboard.js";
 import type * as credits from "../credits.js";
 import type * as rbac from "../rbac.js";
+import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   cashierDashboard: typeof cashierDashboard;
   credits: typeof credits;
   rbac: typeof rbac;
+  transactions: typeof transactions;
   users: typeof users;
 }>;
 

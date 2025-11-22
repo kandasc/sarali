@@ -82,4 +82,37 @@ export default defineSchema({
     .index("by_initiator", ["initiatedBy"])
     .index("by_to", ["toId"])
     .index("by_status", ["status"]),
+
+  transactions: defineTable({
+    type: v.union(
+      v.literal("DEPOSIT"),
+      v.literal("WITHDRAWAL"),
+      v.literal("TRANSFER"),
+      v.literal("PAYMENT")
+    ),
+    customerName: v.string(),
+    customerPhone: v.string(),
+    customerIdNumber: v.optional(v.string()),
+    amount: v.number(),
+    currency: v.union(v.literal("XOF"), v.literal("GNF")),
+    fees: v.optional(v.number()),
+    totalAmount: v.number(),
+    reference: v.string(),
+    description: v.optional(v.string()),
+    recipientName: v.optional(v.string()),
+    recipientPhone: v.optional(v.string()),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("COMPLETED"),
+      v.literal("FAILED"),
+      v.literal("CANCELLED")
+    ),
+    processedBy: v.id("users"),
+    agencyId: v.optional(v.id("agencies")),
+  })
+    .index("by_customer_phone", ["customerPhone"])
+    .index("by_reference", ["reference"])
+    .index("by_processed_by", ["processedBy"])
+    .index("by_agency", ["agencyId"])
+    .index("by_status", ["status"]),
 });
