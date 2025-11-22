@@ -271,3 +271,81 @@ export const getAgencyStats = query({
     };
   },
 });
+
+// Get agency branding by code (public - for white-label payment page)
+export const getAgencyBranding = query({
+  args: {
+    agencyCode: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const agency = await ctx.db
+      .query("agencies")
+      .withIndex("by_code", (q) => q.eq("code", args.agencyCode))
+      .first();
+
+    if (!agency || agency.status !== "ACTIVE") {
+      return null;
+    }
+
+    let brandLogoUrl = null;
+    if (agency.brandLogoStorageId) {
+      brandLogoUrl = await ctx.storage.getUrl(agency.brandLogoStorageId);
+    }
+
+    return {
+      agencyId: agency._id,
+      name: agency.name,
+      brandName: agency.brandName || agency.name,
+      brandLogoUrl,
+      brandPrimaryColor: agency.brandPrimaryColor,
+      brandWebsite: agency.brandWebsite,
+    };
+  },
+});
+
+// Generate upload URL for agency brand logo
+export const generateBrandLogoUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await checkPermission(ctx, ["MASTER", "MANAGER", "CHEF_AGENCE"]);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+// Update agency branding
+export const updateAgencyBranding = mutation({
+  args: {
+    agencyId: v.id("agencies"),
+    brandName: v.optional(v.string()),
+    brandLogoStorageId: v.optional(v.id("_storage")),
+    brandPrimaryColor: v.optional(v.string()),
+    brandWebsite: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await checkPermission(ctx, ["MASTER", "MANAGER", "CHEF_AGENCE"]);
+
+    // Check if user has access to this agency
+    if (
+      user.role === "CHEF_AGENCE" &&
+      user.agencyId?.toString() !== args.agencyId.toString()
+    ) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "You can only update your own agency's branding",
+      });
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (args.brandName !== undefined) updates.brandName = args.brandName;
+    if (args.brandLogoStorageId !== undefined)
+      updates.brandLogoStorageId = args.brandLogoStorageId;
+    if (args.brandPrimaryColor !== undefined)
+      updates.brandPrimaryColor = args.brandPrimaryColor;
+    if (args.brandWebsite !== undefined)
+      updates.brandWebsite = args.brandWebsite;
+
+    await ctx.db.patch(args.agencyId, updates);
+
+    return { success: true };
+  },
+});

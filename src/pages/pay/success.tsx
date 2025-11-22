@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useLocation } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import { Button } from "@/components/ui/button.tsx";
@@ -15,10 +15,13 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import LanguageSwitcher from "@/components/ui/language-switcher.tsx";
+import Footer from "@/components/footer.tsx";
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const paymentReference = searchParams.get("ref");
+  const currentLang = location.pathname.split("/")[1];
 
   const payment = useQuery(
     api.billPayments.getPaymentByReference,
@@ -48,7 +51,7 @@ export default function PaymentSuccessPage() {
             </p>
             <div className="flex justify-center mt-4">
               <Button asChild>
-                <Link to="/pay">Retour au paiement</Link>
+                <Link to={`/${currentLang}`}>Retour au paiement</Link>
               </Button>
             </div>
           </CardContent>
@@ -86,7 +89,7 @@ export default function PaymentSuccessPage() {
           <CardContent className="pt-6 text-center space-y-4">
             <p className="text-muted-foreground">Paiement introuvable</p>
             <Button asChild>
-              <Link to="/pay">Retour au paiement</Link>
+              <Link to={`/${currentLang}`}>Retour au paiement</Link>
             </Button>
           </CardContent>
         </Card>
@@ -259,7 +262,7 @@ export default function PaymentSuccessPage() {
               Imprimer le Reçu
             </Button>
             <Button asChild className="flex-1">
-              <Link to="/pay">
+              <Link to={`/${currentLang}`}>
                 <Home className="mr-2 h-4 w-4" />
                 Nouveau Paiement
               </Link>
@@ -286,6 +289,9 @@ export default function PaymentSuccessPage() {
           </Card>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

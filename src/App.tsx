@@ -49,13 +49,14 @@ export default function App() {
                 </LanguageWrapper>
               }
             >
-              <Route index element={<Index />} />
+              <Route index element={<PublicPaymentPage />} />
+              <Route path="dashboard" element={<Index />} />
               <Route path="master" element={<MasterDashboard />} />
               <Route path="manager" element={<ManagerDashboard />} />
               <Route path="agency" element={<AgencyDashboard />} />
               <Route path="cashier" element={<CashierDashboard />} />
-              <Route path="pay" element={<PublicPaymentPage />} />
-              <Route path="pay/success" element={<PaymentSuccessPage />} />
+              <Route path="success" element={<PaymentSuccessPage />} />
+              <Route path=":agencyCode" element={<PublicPaymentPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Route>

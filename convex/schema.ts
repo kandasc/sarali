@@ -38,6 +38,11 @@ export default defineSchema({
     creditBalance: v.number(),
     currency: v.union(v.literal("XOF"), v.literal("GNF")),
     status: v.union(v.literal("ACTIVE"), v.literal("INACTIVE")),
+    // White-label branding
+    brandName: v.optional(v.string()),
+    brandLogoStorageId: v.optional(v.id("_storage")),
+    brandPrimaryColor: v.optional(v.string()),
+    brandWebsite: v.optional(v.string()),
   })
     .index("by_code", ["code"])
     .index("by_manager", ["managerId"])

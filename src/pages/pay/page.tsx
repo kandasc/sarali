@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
@@ -20,14 +20,15 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import LanguageSwitcher from "@/components/ui/language-switcher.tsx";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/lib/utils.ts";
+import Footer from "@/components/footer.tsx";
+import { SignInButton } from "@/components/ui/signin.tsx";
 
 const paymentSchema = z.object({
   billReference: z.string().min(1, "Référence de facture requise"),
@@ -64,6 +65,8 @@ const categoryLabels: Record<BillCategory, string> = {
 export default function PublicPaymentPage() {
   const { t } = useTranslation(["payment", "common"]);
   const navigate = useNavigate();
+  const { agencyCode } = useParams<{ agencyCode?: string }>();
+  const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<BillCategory | null>(null);
   const [selectedBiller, setSelectedBiller] = useState<{
     id: Id<"billers">;
@@ -74,6 +77,23 @@ export default function PublicPaymentPage() {
     feeFixed?: number;
   } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Check if agencyCode is actually a route (not an agency)
+  const isKnownRoute = ["dashboard", "master", "manager", "agency", "cashier", "success"].includes(
+    agencyCode || ""
+  );
+
+  // Get agency branding if agency code is provided and not a known route
+  const agencyBranding = useQuery(
+    api.agencies.getAgencyBranding,
+    agencyCode && !isKnownRoute ? { agencyCode } : "skip"
+  );
+
+  // Default branding
+  const brandName = agencyBranding?.brandName || "SAYELE Hub";
+  const brandLogoUrl = agencyBranding?.brandLogoUrl;
+  const brandPrimaryColor = agencyBranding?.brandPrimaryColor;
+  const brandWebsite = agencyBranding?.brandWebsite;
 
   // Get active billers for selected category
   const billers = useQuery(
@@ -135,8 +155,8 @@ export default function PublicPaymentPage() {
       });
 
       // Navigate to success page
-      const currentLang = window.location.pathname.split("/")[1];
-      navigate(`/${currentLang}/pay/success?ref=${result.paymentReference}`);
+      const currentLang = location.pathname.split("/")[1];
+      navigate(`/${currentLang}/success?ref=${result.paymentReference}`);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -159,21 +179,38 @@ export default function PublicPaymentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       {/* Header */}
       <nav className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">SAYELE Hub</span>
+          <div className="flex items-center gap-3">
+            {brandLogoUrl ? (
+              <img
+                src={brandLogoUrl}
+                alt={brandName}
+                className="h-8 w-8 object-contain"
+              />
+            ) : (
+              <Building2 className="h-8 w-8 text-primary" />
+            )}
+            <span className="text-2xl font-bold" style={brandPrimaryColor ? { color: brandPrimaryColor } : {}}>
+              {brandName}
+            </span>
             <span className="ml-2 text-muted-foreground">• {t("app.billPayment", { ns: "common" })}</span>
           </div>
-          <LanguageSwitcher />
+          <div className="flex items-center gap-3">
+            <SignInButton variant="outline" size="sm">
+              <LogIn className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Connexion Agent</span>
+              <span className="sm:hidden">Connexion</span>
+            </SignInButton>
+            <LanguageSwitcher />
+          </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12 flex-1">
         <div className="mx-auto max-w-5xl space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
@@ -181,6 +218,18 @@ export default function PublicPaymentPage() {
             <p className="text-muted-foreground">
               Paiement rapide et sécurisé via SAYELE gate
             </p>
+            {brandWebsite && (
+              <p className="text-sm">
+                <a
+                  href={brandWebsite}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Visitez notre site web
+                </a>
+              </p>
+            )}
           </div>
 
           {/* Step 1: Category Selection */}
@@ -458,6 +507,7 @@ export default function PublicPaymentPage() {
                     className="w-full"
                     size="lg"
                     disabled={isProcessing}
+                    style={brandPrimaryColor ? { backgroundColor: brandPrimaryColor } : {}}
                   >
                     {isProcessing ? (
                       <span className="flex items-center gap-2">
@@ -496,6 +546,9 @@ export default function PublicPaymentPage() {
           </Card>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
