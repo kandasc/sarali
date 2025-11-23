@@ -54,7 +54,7 @@ export const createAgency = mutation({
     currency: v.union(v.literal("XOF"), v.literal("GNF")),
   },
   handler: async (ctx, args) => {
-    const currentUser = await checkPermission(ctx, ["MASTER", "MANAGER"]);
+    const currentUser = await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER"]);
 
     // Check if code already exists
     const existingAgency = await ctx.db
@@ -95,6 +95,7 @@ export const listAgencies = query({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -157,7 +158,7 @@ export const listAgencies = query({
 export const getAgencyById = query({
   args: { agencyId: v.id("agencies") },
   handler: async (ctx, args) => {
-    await checkPermission(ctx, ["MASTER", "MANAGER", "CHEF_AGENCE"]);
+    await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER", "CHEF_AGENCE"]);
 
     const agency = await ctx.db.get(args.agencyId);
     if (!agency) {
@@ -205,7 +206,7 @@ export const updateAgency = mutation({
     status: v.optional(v.union(v.literal("ACTIVE"), v.literal("INACTIVE"))),
   },
   handler: async (ctx, args) => {
-    await checkPermission(ctx, ["MASTER", "MANAGER"]);
+    await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER"]);
 
     const agency = await ctx.db.get(args.agencyId);
     if (!agency) {
@@ -234,7 +235,7 @@ export const updateAgency = mutation({
 export const getAgencyStats = query({
   args: { agencyId: v.id("agencies") },
   handler: async (ctx, args) => {
-    await checkPermission(ctx, ["MASTER", "MANAGER", "CHEF_AGENCE"]);
+    await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER", "CHEF_AGENCE"]);
 
     const agency = await ctx.db.get(args.agencyId);
     if (!agency) {
@@ -307,7 +308,7 @@ export const getAgencyBranding = query({
 export const generateBrandLogoUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await checkPermission(ctx, ["MASTER", "MANAGER", "CHEF_AGENCE"]);
+    await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER", "CHEF_AGENCE"]);
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -322,7 +323,7 @@ export const updateAgencyBranding = mutation({
     brandWebsite: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await checkPermission(ctx, ["MASTER", "MANAGER", "CHEF_AGENCE"]);
+    const user = await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER", "CHEF_AGENCE"]);
 
     // Check if user has access to this agency
     if (

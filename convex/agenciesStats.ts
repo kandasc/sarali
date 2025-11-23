@@ -44,7 +44,7 @@ async function checkPermission(
 export const getGlobalStats = query({
   args: {},
   handler: async (ctx) => {
-    await checkPermission(ctx, ["MASTER", "MANAGER"]);
+    await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER"]);
 
     const agencies = await ctx.db.query("agencies").collect();
     const allUsers = await ctx.db.query("users").collect();
@@ -127,7 +127,7 @@ export const getGlobalStats = query({
 export const getAgenciesByCountry = query({
   args: {},
   handler: async (ctx) => {
-    await checkPermission(ctx, ["MASTER", "MANAGER"]);
+    await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER"]);
 
     const agencies = await ctx.db.query("agencies").collect();
 

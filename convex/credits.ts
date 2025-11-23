@@ -47,7 +47,7 @@ export const addSystemCredit = mutation({
     amount: v.number(),
   },
   handler: async (ctx, args) => {
-    const currentUser = await checkPermission(ctx, ["MASTER"]);
+    const currentUser = await checkPermission(ctx, ["SUPER_ADMIN", "MASTER"]);
 
     if (args.amount <= 0) {
       throw new ConvexError({
@@ -92,6 +92,7 @@ export const transferCreditToUser = mutation({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -219,7 +220,7 @@ export const transferCreditToAgency = mutation({
     reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const currentUser = await checkPermission(ctx, ["MASTER", "MANAGER"]);
+    const currentUser = await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER"]);
 
     if (args.amount <= 0) {
       throw new ConvexError({
@@ -461,6 +462,7 @@ export const getLowCreditAlerts = query({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",

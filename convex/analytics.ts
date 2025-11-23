@@ -47,6 +47,7 @@ export const getTransactionAnalytics = query({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -167,7 +168,7 @@ export const getAgencyPerformance = query({
     endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const currentUser = await checkPermission(ctx, ["MASTER", "MANAGER"]);
+    const currentUser = await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER"]);
 
     const startDate = args.startDate || Date.now() - 30 * 24 * 60 * 60 * 1000;
     const endDate = args.endDate || Date.now();
@@ -236,6 +237,7 @@ export const getUserPerformance = query({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -318,7 +320,7 @@ export const getFinancialSummary = query({
     endDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const currentUser = await checkPermission(ctx, ["MASTER", "MANAGER"]);
+    const currentUser = await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER"]);
 
     const startDate = args.startDate || Date.now() - 30 * 24 * 60 * 60 * 1000;
     const endDate = args.endDate || Date.now();
