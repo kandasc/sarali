@@ -3,7 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import DashboardLayout from "@/components/dashboard-layout.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { Shield, Users, Sparkles, BarChart, AlertCircle, Building2, Wallet, Activity, LayoutDashboard, BarChart3, FileStack } from "lucide-react";
+import { Shield, Users, Sparkles, AlertCircle, Building2, Wallet, Activity, LayoutDashboard, BarChart3 } from "lucide-react";
 import OverviewTab from "./_components/overview-tab.tsx";
 import UsersTab from "./_components/users-tab.tsx";
 import BillersTab from "../master/_components/billers-tab.tsx";
@@ -12,7 +12,6 @@ import AgenciesTab from "../master/_components/agencies-tab.tsx";
 import CreditsTab from "../master/_components/credits-tab.tsx";
 import ActivityTab from "../master/_components/activity-tab.tsx";
 import ReportsTab from "../master/_components/reports-tab.tsx";
-import BulkPaymentsTab from "../master/_components/bulk-payments-tab.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
@@ -85,7 +84,7 @@ function SuperAdminContent() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 md:grid-cols-10">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -101,10 +100,6 @@ function SuperAdminContent() {
             <TabsTrigger value="reports" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Reports</span>
-            </TabsTrigger>
-            <TabsTrigger value="bulkPayments" className="flex items-center gap-2">
-              <FileStack className="h-4 w-4" />
-              <span className="hidden sm:inline">Bulk Pay</span>
             </TabsTrigger>
             <TabsTrigger value="billers" className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
@@ -138,10 +133,6 @@ function SuperAdminContent() {
 
           <TabsContent value="reports" className="space-y-4">
             <ReportsTab />
-          </TabsContent>
-
-          <TabsContent value="bulkPayments" className="space-y-4">
-            <BulkPaymentsTab />
           </TabsContent>
 
           <TabsContent value="billers" className="space-y-4">

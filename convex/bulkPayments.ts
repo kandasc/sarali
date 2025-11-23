@@ -32,9 +32,9 @@ async function checkBulkPaymentPermission(
   userId: Id<"users">
 ): Promise<void> {
   const user = await ctx.db.get(userId);
-  if (!user || (user.role !== "SUPER_ADMIN" && user.role !== "MASTER" && user.role !== "CAISSIER")) {
+  if (!user || (user.role !== "MASTER" && user.role !== "CAISSIER")) {
     throw new ConvexError({
-      message: "Accès refusé. Seuls le Super Admin, Master et les Caissiers peuvent gérer les paiements de masse.",
+      message: "Accès refusé. Seuls le Master et les Caissiers peuvent gérer les paiements de masse.",
       code: "FORBIDDEN",
     });
   }
