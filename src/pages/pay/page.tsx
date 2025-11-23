@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -29,6 +29,7 @@ import LanguageSwitcher from "@/components/ui/language-switcher.tsx";
 import { useTranslation } from "react-i18next";
 import Footer from "@/components/footer.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
+import { Authenticated, Unauthenticated } from "convex/react";
 
 const paymentSchema = z.object({
   billReference: z.string().min(1, "Référence de facture requise"),
@@ -77,6 +78,9 @@ export default function PublicPaymentPage() {
     feeFixed?: number;
   } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Get current user for dashboard link
+  const currentUser = useQuery(api.users.getCurrentUser);
 
   // Check if agencyCode is actually a route (not an agency)
   const isKnownRoute = ["dashboard", "master", "manager", "agency", "cashier", "success"].includes(
@@ -199,11 +203,48 @@ export default function PublicPaymentPage() {
             <span className="ml-2 text-muted-foreground">• {t("app.billPayment", { ns: "common" })}</span>
           </div>
           <div className="flex items-center gap-3">
-            <SignInButton variant="outline" size="sm">
-              <LogIn className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Connexion Agent</span>
-              <span className="sm:hidden">Connexion</span>
-            </SignInButton>
+            <Unauthenticated>
+              <SignInButton variant="outline" size="sm">
+                <LogIn className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Connexion Agent</span>
+                <span className="sm:hidden">Connexion</span>
+              </SignInButton>
+            </Unauthenticated>
+            <Authenticated>
+              {currentUser && (() => {
+                const lang = location.pathname.split("/")[1] || "fr";
+                let dashboardPath = `/${lang}/cashier`;
+                
+                // Route based on role
+                switch (currentUser.role) {
+                  case "SUPER_ADMIN":
+                    dashboardPath = `/${lang}/superadmin`;
+                    break;
+                  case "MASTER":
+                    dashboardPath = `/${lang}/master`;
+                    break;
+                  case "MANAGER":
+                    dashboardPath = `/${lang}/manager`;
+                    break;
+                  case "CHEF_AGENCE":
+                    dashboardPath = `/${lang}/agency`;
+                    break;
+                  case "CAISSIER":
+                    dashboardPath = `/${lang}/cashier`;
+                    break;
+                }
+                
+                return (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={dashboardPath}>
+                      <LayoutDashboard className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Dashboard</span>
+                      <span className="sm:hidden">Dashboard</span>
+                    </Link>
+                  </Button>
+                );
+              })()}
+            </Authenticated>
             <LanguageSwitcher />
           </div>
         </div>
