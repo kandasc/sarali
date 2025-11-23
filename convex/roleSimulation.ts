@@ -30,10 +30,10 @@ export const startSimulation = mutation({
       )
       .unique();
 
-    if (!master || master.role !== "MASTER") {
+    if (!master || (master.role !== "MASTER" && master.role !== "SUPER_ADMIN")) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "Only MASTER users can simulate roles",
+        message: "Only MASTER and SUPER_ADMIN users can simulate roles",
       });
     }
 
@@ -111,10 +111,10 @@ export const endSimulation = mutation({
       )
       .unique();
 
-    if (!master || master.role !== "MASTER") {
+    if (!master || (master.role !== "MASTER" && master.role !== "SUPER_ADMIN")) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "Only MASTER users can end simulations",
+        message: "Only MASTER and SUPER_ADMIN users can end simulations",
       });
     }
 
@@ -173,7 +173,7 @@ export const getActiveSimulation = query({
       )
       .unique();
 
-    if (!user || user.role !== "MASTER") {
+    if (!user || (user.role !== "MASTER" && user.role !== "SUPER_ADMIN")) {
       return null;
     }
 
@@ -225,25 +225,34 @@ export const getSimulationHistory = query({
       });
     }
 
-    const master = await ctx.db
+    const user = await ctx.db
       .query("users")
       .withIndex("by_token", (q) =>
         q.eq("tokenIdentifier", identity.tokenIdentifier)
       )
       .unique();
 
-    if (!master || master.role !== "MASTER") {
+    if (!user || (user.role !== "MASTER" && user.role !== "SUPER_ADMIN")) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "Only MASTER users can view simulation history",
+        message: "Only MASTER and SUPER_ADMIN users can view simulation history",
       });
     }
 
-    const sessions = await ctx.db
-      .query("roleSimulations")
-      .withIndex("by_master", (q) => q.eq("masterUserId", master._id))
-      .order("desc")
-      .take(args.limit || 50);
+    // SUPER_ADMIN can see all simulations, MASTER only sees their own
+    let sessions;
+    if (user.role === "SUPER_ADMIN") {
+      sessions = await ctx.db
+        .query("roleSimulations")
+        .order("desc")
+        .take(args.limit || 50);
+    } else {
+      sessions = await ctx.db
+        .query("roleSimulations")
+        .withIndex("by_master", (q) => q.eq("masterUserId", user._id))
+        .order("desc")
+        .take(args.limit || 50);
+    }
 
     const enrichedSessions = await Promise.all(
       sessions.map(async (session) => {
@@ -251,9 +260,19 @@ export const getSimulationHistory = query({
         if (session.targetUserId) {
           targetUser = await ctx.db.get(session.targetUserId);
         }
+        
+        // Get master user info
+        const masterUser = await ctx.db.get(session.masterUserId);
 
         return {
           ...session,
+          masterUser: masterUser
+            ? {
+                id: masterUser._id,
+                name: masterUser.name,
+                email: masterUser.email,
+              }
+            : null,
           targetUser: targetUser
             ? {
                 id: targetUser._id,
