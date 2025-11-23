@@ -297,6 +297,7 @@ export const getCreditOverview = query({
   args: {},
   handler: async (ctx) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -306,7 +307,7 @@ export const getCreditOverview = query({
     let totalAgencyCredit = 0;
     let totalUserCredit = 0;
 
-    if (currentUser.role === "MASTER") {
+    if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "MASTER") {
       // Get all users credit
       const allUsers = await ctx.db.query("users").collect();
       totalUserCredit = allUsers.reduce(
@@ -386,6 +387,7 @@ export const getTransactionHistory = query({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -394,8 +396,8 @@ export const getTransactionHistory = query({
 
     let transactions;
 
-    if (currentUser.role === "MASTER") {
-      // Masters see all transactions
+    if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "MASTER") {
+      // Super Admins and Masters see all transactions
       transactions = await ctx.db
         .query("creditTransactions")
         .order("desc")
@@ -471,7 +473,7 @@ export const getLowCreditAlerts = query({
     const threshold = args.threshold || 10000;
     let users: Doc<"users">[];
 
-    if (currentUser.role === "MASTER") {
+    if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "MASTER") {
       users = await ctx.db.query("users").collect();
     } else if (currentUser.role === "MANAGER") {
       users = await ctx.db
