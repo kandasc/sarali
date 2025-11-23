@@ -72,6 +72,9 @@ export default function ReportsTab() {
     endDate,
   });
 
+  // Get bulk payments (bank files) data
+  const bulkPayments = useQuery(api.bulkPayments.listBulkPayments, {});
+
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat("fr-FR", {
       minimumFractionDigits: 0,
@@ -99,7 +102,7 @@ export default function ReportsTab() {
     toast.success("Rapport exporté avec succès");
   };
 
-  if (!transactionAnalytics || !agencyPerformance || !userPerformance || !financialSummary || !agencies) {
+  if (!transactionAnalytics || !agencyPerformance || !userPerformance || !financialSummary || !agencies || !bulkPayments) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
@@ -241,6 +244,7 @@ export default function ReportsTab() {
           <TabsTrigger value="agencies">Agences</TabsTrigger>
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="financial">Financier</TabsTrigger>
+          <TabsTrigger value="banks">Banques</TabsTrigger>
         </TabsList>
 
         {/* Trends Tab */}
@@ -525,6 +529,144 @@ export default function ReportsTab() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Banks Tab - Bulk Payments from Bank Files */}
+        <TabsContent value="banks" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Fichiers Bancaires Téléchargés</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Historique des lots de paiements uploadés
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const exportData = bulkPayments.map((batch) => ({
+                      Reference: batch.batchReference,
+                      FileName: batch.fileName,
+                      TotalItems: batch.totalItems,
+                      TotalAmount: batch.totalAmount,
+                      Currency: batch.currency,
+                      ProcessedItems: batch.processedItems,
+                      SuccessfulItems: batch.successfulItems,
+                      FailedItems: batch.failedItems,
+                      Status: batch.status,
+                      CreatedAt: new Date(batch._creationTime).toLocaleDateString("fr-FR"),
+                    }));
+                    exportToCSV(exportData, "bank-files-report");
+                  }}
+                >
+                  <DownloadIcon className="h-4 w-4 mr-2" />
+                  Exporter CSV
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Référence</th>
+                      <th className="text-left p-2">Fichier</th>
+                      <th className="text-right p-2">Total Items</th>
+                      <th className="text-right p-2">Montant Total</th>
+                      <th className="text-right p-2">Traités</th>
+                      <th className="text-right p-2">Réussis</th>
+                      <th className="text-right p-2">Échoués</th>
+                      <th className="text-center p-2">Statut</th>
+                      <th className="text-left p-2">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkPayments.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="text-center py-8 text-muted-foreground">
+                          Aucun fichier bancaire téléchargé
+                        </td>
+                      </tr>
+                    ) : (
+                      bulkPayments.map((batch) => (
+                        <tr key={batch._id} className="border-b hover:bg-accent/50">
+                          <td className="p-2 font-mono text-xs">{batch.batchReference}</td>
+                          <td className="p-2 font-medium">{batch.fileName}</td>
+                          <td className="p-2 text-right">{batch.totalItems}</td>
+                          <td className="p-2 text-right">
+                            {formatCurrency(batch.totalAmount, batch.currency)}
+                          </td>
+                          <td className="p-2 text-right">{batch.processedItems}</td>
+                          <td className="p-2 text-right text-green-600">{batch.successfulItems}</td>
+                          <td className="p-2 text-right text-red-600">{batch.failedItems}</td>
+                          <td className="p-2 text-center">
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                batch.status === "COMPLETED"
+                                  ? "bg-green-100 text-green-800"
+                                  : batch.status === "PROCESSING"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : batch.status === "FAILED"
+                                      ? "bg-red-100 text-red-800"
+                                      : batch.status === "CANCELLED"
+                                        ? "bg-gray-100 text-gray-800"
+                                        : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {batch.status}
+                            </span>
+                          </td>
+                          <td className="p-2 text-xs">
+                            {new Date(batch._creationTime).toLocaleString("fr-FR")}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Summary Stats */}
+              {bulkPayments.length > 0 && (
+                <div className="mt-6 grid gap-4 md:grid-cols-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-2xl font-bold">
+                        {bulkPayments.length}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Total Fichiers</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-2xl font-bold">
+                        {bulkPayments.reduce((sum, b) => sum + b.totalItems, 0)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Total Paiements</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-2xl font-bold text-green-600">
+                        {bulkPayments.reduce((sum, b) => sum + b.successfulItems, 0)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Paiements Réussis</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-2xl font-bold text-red-600">
+                        {bulkPayments.reduce((sum, b) => sum + b.failedItems, 0)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Paiements Échoués</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
