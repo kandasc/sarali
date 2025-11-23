@@ -20,6 +20,7 @@ import type * as credits from "../credits.js";
 import type * as ocr from "../ocr.js";
 import type * as rbac from "../rbac.js";
 import type * as roleSimulation from "../roleSimulation.js";
+import type * as superAdmin from "../superAdmin.js";
 import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   ocr: typeof ocr;
   rbac: typeof rbac;
   roleSimulation: typeof roleSimulation;
+  superAdmin: typeof superAdmin;
   transactions: typeof transactions;
   users: typeof users;
 }>;

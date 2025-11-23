@@ -24,16 +24,19 @@ export const updateCurrentUser = mutation({
       return user._id;
     }
     
+    // Check if this is the designated super admin email
+    const isSuperAdmin = identity.email === "kandasc@gmail.com";
+    
     // Check if this is the first user (will be MASTER)
     const existingUsers = await ctx.db.query("users").collect();
-    const isMaster = existingUsers.length === 0;
+    const isMaster = existingUsers.length === 0 && !isSuperAdmin;
     
     // If it's a new identity, create a new User.
     return await ctx.db.insert("users", {
       name: identity.name,
       email: identity.email,
       tokenIdentifier: identity.tokenIdentifier,
-      role: isMaster ? "MASTER" : "CAISSIER",
+      role: isSuperAdmin ? "SUPER_ADMIN" : isMaster ? "MASTER" : "CAISSIER",
       status: "ACTIVE",
       creditBalance: 0,
       currency: "XOF",

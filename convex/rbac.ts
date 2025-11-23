@@ -76,6 +76,7 @@ export const createUser = mutation({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -142,6 +143,7 @@ export const listUsers = query({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -159,13 +161,16 @@ export const listUsers = query({
       users = await ctx.db.query("users").collect();
     }
 
-    // Apply hierarchy filters
+    // Apply hierarchy filters (SUPER_ADMIN sees all)
     if (currentUser.role === "CHEF_AGENCE") {
       users = users.filter((u) => u.agencyId === currentUser.agencyId);
     } else if (currentUser.role === "MANAGER") {
       users = users.filter(
         (u) => u.managerId === currentUser._id || u._id === currentUser._id
       );
+    } else if (currentUser.role === "MASTER") {
+      // MASTER sees all except SUPER_ADMIN
+      users = users.filter((u) => u.role !== "SUPER_ADMIN");
     }
 
     // Filter by agency
@@ -186,7 +191,7 @@ export const listUsers = query({
 export const getUserById = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    await checkPermission(ctx, ["MASTER", "MANAGER", "CHEF_AGENCE"]);
+    await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER", "CHEF_AGENCE"]);
 
     const user = await ctx.db.get(args.userId);
     if (!user) {
@@ -229,6 +234,7 @@ export const updateUser = mutation({
   },
   handler: async (ctx, args) => {
     const currentUser = await checkPermission(ctx, [
+      "SUPER_ADMIN",
       "MASTER",
       "MANAGER",
       "CHEF_AGENCE",
@@ -277,7 +283,7 @@ export const updateUser = mutation({
 export const deactivateUser = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const currentUser = await checkPermission(ctx, ["MASTER", "MANAGER"]);
+    const currentUser = await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER"]);
 
     if (currentUser._id === args.userId) {
       throw new ConvexError({
@@ -316,7 +322,7 @@ export const getActivityLogs = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await checkPermission(ctx, ["MASTER", "MANAGER", "CHEF_AGENCE"]);
+    await checkPermission(ctx, ["SUPER_ADMIN", "MASTER", "MANAGER", "CHEF_AGENCE"]);
 
     let logs;
     if (args.userId !== undefined) {

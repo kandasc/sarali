@@ -3,21 +3,21 @@ import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel.d.ts";
 import { ConvexError } from "convex/values";
 
-// Check if user is Master
-async function checkMasterPermission(
+// Check if user is Super Admin or Master
+async function checkBillerManagementPermission(
   ctx: {
     db: {
       get: (id: Id<"users">) => Promise<{
-        role: "MASTER" | "MANAGER" | "CHEF_AGENCE" | "CAISSIER";
+        role: "SUPER_ADMIN" | "MASTER" | "MANAGER" | "CHEF_AGENCE" | "CAISSIER";
       } | null>;
     };
   },
   userId: Id<"users">
 ): Promise<void> {
   const user = await ctx.db.get(userId);
-  if (!user || user.role !== "MASTER") {
+  if (!user || (user.role !== "SUPER_ADMIN" && user.role !== "MASTER")) {
     throw new ConvexError({
-      message: "Accès refusé. Seul le Master peut gérer les fournisseurs.",
+      message: "Accès refusé. Seuls les Super Admin et Master peuvent gérer les fournisseurs.",
       code: "FORBIDDEN",
     });
   }
@@ -49,7 +49,7 @@ export const generateLogoUploadUrl = mutation({
       });
     }
 
-    await checkMasterPermission(ctx, user._id);
+    await checkBillerManagementPermission(ctx, user._id);
 
     return await ctx.storage.generateUploadUrl();
   },
@@ -99,7 +99,7 @@ export const createBiller = mutation({
       });
     }
 
-    await checkMasterPermission(ctx, user._id);
+    await checkBillerManagementPermission(ctx, user._id);
 
     // Check if code already exists
     const existing = await ctx.db
@@ -180,7 +180,7 @@ export const updateBiller = mutation({
       });
     }
 
-    await checkMasterPermission(ctx, user._id);
+    await checkBillerManagementPermission(ctx, user._id);
 
     const biller = await ctx.db.get(args.billerId);
     if (!biller) {
@@ -254,7 +254,7 @@ export const deleteBiller = mutation({
       });
     }
 
-    await checkMasterPermission(ctx, user._id);
+    await checkBillerManagementPermission(ctx, user._id);
 
     await ctx.db.delete(args.billerId);
 
@@ -288,7 +288,7 @@ export const listAllBillers = query({
       });
     }
 
-    await checkMasterPermission(ctx, user._id);
+    await checkBillerManagementPermission(ctx, user._id);
 
     const billers = await ctx.db.query("billers").collect();
 

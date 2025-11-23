@@ -13,6 +13,7 @@ import "./i18n";
 import AuthCallback from "./pages/auth/Callback.tsx";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import SuperAdminDashboard from "./pages/superadmin/page.tsx";
 import MasterDashboard from "./pages/master/page.tsx";
 import ManagerDashboard from "./pages/manager/page.tsx";
 import AgencyDashboard from "./pages/agency/page.tsx";
@@ -51,6 +52,7 @@ export default function App() {
             >
               <Route index element={<PublicPaymentPage />} />
               <Route path="dashboard" element={<Index />} />
+              <Route path="superadmin" element={<SuperAdminDashboard />} />
               <Route path="master" element={<MasterDashboard />} />
               <Route path="manager" element={<ManagerDashboard />} />
               <Route path="agency" element={<AgencyDashboard />} />

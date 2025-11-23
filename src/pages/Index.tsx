@@ -121,7 +121,9 @@ function DashboardRouter() {
   }
 
   // Route based on role
-  if (currentUser.role === "MASTER") {
+  if (currentUser.role === "SUPER_ADMIN") {
+    return <Navigate to={`${langPrefix}/superadmin`} replace />;
+  } else if (currentUser.role === "MASTER") {
     return <Navigate to={`${langPrefix}/master`} replace />;
   } else if (currentUser.role === "MANAGER") {
     return <Navigate to={`${langPrefix}/manager`} replace />;

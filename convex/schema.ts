@@ -7,6 +7,7 @@ export default defineSchema({
     name: v.optional(v.string()),
     email: v.optional(v.string()),
     role: v.union(
+      v.literal("SUPER_ADMIN"),
       v.literal("MASTER"),
       v.literal("MANAGER"),
       v.literal("CHEF_AGENCE"),
