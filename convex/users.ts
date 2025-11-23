@@ -20,7 +20,14 @@ export const updateCurrentUser = mutation({
         q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique();
+    
     if (user !== null) {
+      // Upgrade existing user to SUPER_ADMIN if they have the designated email
+      if (identity.email === "kandasc@gmail.com" && user.role !== "SUPER_ADMIN") {
+        await ctx.db.patch(user._id, {
+          role: "SUPER_ADMIN",
+        });
+      }
       return user._id;
     }
     

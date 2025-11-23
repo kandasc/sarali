@@ -17,6 +17,7 @@ import type * as billers from "../billers.js";
 import type * as bulkPayments from "../bulkPayments.js";
 import type * as cashierDashboard from "../cashierDashboard.js";
 import type * as credits from "../credits.js";
+import type * as migrations from "../migrations.js";
 import type * as ocr from "../ocr.js";
 import type * as rbac from "../rbac.js";
 import type * as roleSimulation from "../roleSimulation.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   bulkPayments: typeof bulkPayments;
   cashierDashboard: typeof cashierDashboard;
   credits: typeof credits;
+  migrations: typeof migrations;
   ocr: typeof ocr;
   rbac: typeof rbac;
   roleSimulation: typeof roleSimulation;
