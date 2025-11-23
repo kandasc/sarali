@@ -13,8 +13,8 @@ export const updateCurrentUser = mutation({
       });
     }
 
-    // Check if we've already stored this identity before.
-    const user = await ctx.db
+    // Check if we've already stored this identity before by tokenIdentifier
+    let user = await ctx.db
       .query("users")
       .withIndex("by_token", (q) =>
         q.eq("tokenIdentifier", identity.tokenIdentifier),
@@ -29,6 +29,32 @@ export const updateCurrentUser = mutation({
         });
       }
       return user._id;
+    }
+    
+    // If not found by token, check by email (for pre-created users)
+    if (identity.email) {
+      const userByEmail = await ctx.db
+        .query("users")
+        .withSearchIndex("search_email", (q) => q.search("email", identity.email!))
+        .filter((q) => q.eq(q.field("email"), identity.email))
+        .first();
+      
+      if (userByEmail) {
+        // Update the tokenIdentifier for this pre-created user
+        await ctx.db.patch(userByEmail._id, {
+          tokenIdentifier: identity.tokenIdentifier,
+          name: identity.name || userByEmail.name,
+        });
+        
+        // Upgrade to SUPER_ADMIN if needed
+        if (identity.email === "kandasc@gmail.com" && userByEmail.role !== "SUPER_ADMIN") {
+          await ctx.db.patch(userByEmail._id, {
+            role: "SUPER_ADMIN",
+          });
+        }
+        
+        return userByEmail._id;
+      }
     }
     
     // Check if this is the designated super admin email

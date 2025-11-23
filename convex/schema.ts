@@ -25,7 +25,10 @@ export default defineSchema({
     .index("by_role", ["role"])
     .index("by_agency", ["agencyId"])
     .index("by_manager", ["managerId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .searchIndex("search_email", {
+      searchField: "email",
+    }),
 
   agencies: defineTable({
     name: v.string(),
