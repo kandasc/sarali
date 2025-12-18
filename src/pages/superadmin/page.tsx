@@ -16,7 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { useNavigate, useParams } from "react-router-dom";
-import { RoleSimulationBanner } from "@/components/role-simulation-banner.tsx";
 import { RoleSimulationControls } from "@/components/role-simulation-controls.tsx";
 
 function SuperAdminContent() {
@@ -75,7 +74,6 @@ function SuperAdminContent() {
   return (
     <DashboardLayout title="Super Admin">
       <div className="space-y-6">
-        <RoleSimulationBanner />
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Shield className="h-8 w-8 text-purple-500" />
