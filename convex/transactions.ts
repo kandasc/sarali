@@ -4,8 +4,8 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id, Doc } from "./_generated/dataModel.d.ts";
 
-// Helper function to check permissions
-async function checkPermission(ctx: QueryCtx | MutationCtx, requiredRole: string[]) {
+// Helper function to get effective user with simulation support
+async function getEffectiveUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new ConvexError({
@@ -28,14 +28,39 @@ async function checkPermission(ctx: QueryCtx | MutationCtx, requiredRole: string
     });
   }
 
-  if (!requiredRole.includes(user.role)) {
+  // Check for active simulation
+  if (user.role === "MASTER" || user.role === "SUPER_ADMIN") {
+    const activeSimulation = await ctx.db
+      .query("roleSimulations")
+      .withIndex("by_master", (q) => q.eq("masterUserId", user._id))
+      .filter((q) => q.eq(q.field("endedAt"), undefined))
+      .first();
+
+    if (activeSimulation) {
+      // Return user with simulated role
+      return {
+        ...user,
+        role: activeSimulation.simulatedRole,
+        isSimulation: true,
+      };
+    }
+  }
+
+  return { ...user, isSimulation: false };
+}
+
+// Helper function to check permissions
+async function checkPermission(ctx: QueryCtx | MutationCtx, requiredRole: string[]) {
+  const effectiveUser = await getEffectiveUser(ctx);
+
+  if (!requiredRole.includes(effectiveUser.role)) {
     throw new ConvexError({
       code: "FORBIDDEN",
       message: "Insufficient permissions",
     });
   }
 
-  return user;
+  return effectiveUser;
 }
 
 // Generate unique transaction reference
