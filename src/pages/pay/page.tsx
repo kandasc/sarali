@@ -30,6 +30,7 @@ import { useTranslation } from "react-i18next";
 import Footer from "@/components/footer.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Authenticated, Unauthenticated } from "convex/react";
+import { useAuth } from "@/hooks/use-auth.ts";
 
 const paymentSchema = z.object({
   billReference: z.string().min(1, "Référence de facture requise"),
@@ -79,8 +80,12 @@ export default function PublicPaymentPage() {
   } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Get current user for dashboard link
-  const currentUser = useQuery(api.users.getCurrentUser);
+  // Get current user for dashboard link - only when authenticated
+  const { user } = useAuth();
+  const currentUser = useQuery(
+    api.users.getCurrentUser,
+    user ? {} : "skip"
+  );
 
   // Check if agencyCode is actually a route (not an agency)
   const isKnownRoute = ["dashboard", "master", "manager", "agency", "cashier", "success"].includes(
