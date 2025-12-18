@@ -59,7 +59,7 @@ export const getTransactionAnalytics = query({
     let transactions: Doc<"transactions">[] = [];
 
     // Filter based on role
-    if (currentUser.role === "MASTER") {
+    if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "MASTER") {
       transactions = await ctx.db.query("transactions").collect();
     } else if (currentUser.role === "MANAGER") {
       const agencies = await ctx.db
@@ -175,7 +175,7 @@ export const getAgencyPerformance = query({
 
     let agencies: Doc<"agencies">[] = [];
 
-    if (currentUser.role === "MASTER") {
+    if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "MASTER") {
       agencies = await ctx.db.query("agencies").collect();
     } else if (currentUser.role === "MANAGER") {
       agencies = await ctx.db
@@ -248,7 +248,7 @@ export const getUserPerformance = query({
 
     let users: Doc<"users">[] = [];
 
-    if (currentUser.role === "MASTER") {
+    if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "MASTER") {
       users = await ctx.db.query("users").collect();
     } else if (currentUser.role === "MANAGER") {
       const agencies = await ctx.db
@@ -327,7 +327,7 @@ export const getFinancialSummary = query({
 
     let transactions: Doc<"transactions">[] = [];
 
-    if (currentUser.role === "MASTER") {
+    if (currentUser.role === "SUPER_ADMIN" || currentUser.role === "MASTER") {
       transactions = await ctx.db.query("transactions").collect();
     } else if (currentUser.role === "MANAGER") {
       const agencies = await ctx.db

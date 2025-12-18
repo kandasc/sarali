@@ -109,8 +109,8 @@ function DashboardRouter() {
 
   const langPrefix = lng ? `/${lng}` : "/fr";
 
-  // If Master is simulating a role, redirect to that role's dashboard
-  if (currentUser.role === "MASTER" && activeSimulation) {
+  // If Master or Super Admin is simulating a role, redirect to that role's dashboard
+  if ((currentUser.role === "MASTER" || currentUser.role === "SUPER_ADMIN") && activeSimulation) {
     if (activeSimulation.simulatedRole === "MANAGER") {
       return <Navigate to={`${langPrefix}/manager`} replace />;
     } else if (activeSimulation.simulatedRole === "CHEF_AGENCE") {
