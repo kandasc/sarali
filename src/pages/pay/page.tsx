@@ -158,7 +158,7 @@ export default function PublicPaymentPage() {
         currency: data.currency,
       });
 
-      // Step 2: Process payment through SAYELE gate
+      // Step 2: Process payment through Sarali gateway
       await processBillPayment({
         paymentId: result.paymentId,
       });
@@ -200,7 +200,7 @@ export default function PublicPaymentPage() {
                 className="h-8 w-8 object-contain"
               />
             ) : (
-              <Building2 className="h-8 w-8 text-primary" />
+              <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
             )}
             <span className="text-2xl font-bold" style={brandPrimaryColor ? { color: brandPrimaryColor } : {}}>
               {brandName}

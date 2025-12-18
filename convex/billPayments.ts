@@ -91,8 +91,8 @@ export const initiateBillPayment = mutation({
   },
 });
 
-// Process payment with SAYELE gate
-// NOTE: This is a placeholder. Replace with actual SAYELE API integration
+// Process payment with Sarali gateway
+// NOTE: This is a placeholder. Replace with actual Sarali API integration
 export const processBillPayment = mutation({
   args: {
     paymentId: v.id("billPayments"),
@@ -119,23 +119,23 @@ export const processBillPayment = mutation({
       status: "PROCESSING",
     });
 
-    // TODO: Integrate with SAYELE gate API here
+    // TODO: Integrate with Sarali gateway API here
     // For now, we'll simulate a successful payment
-    // In production, this should be replaced with actual API calls to SAYELE
+    // In production, this should be replaced with actual API calls to Sarali
 
-    // Simulate SAYELE transaction ID
-    const sayeleTransactionId = `SAYELE-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
+    // Simulate Sarali transaction ID
+    const saraliTransactionId = `SARALI-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
 
     // Update payment as completed
     await ctx.db.patch(args.paymentId, {
       status: "COMPLETED",
-      sayeleTransactionId,
+      saraliTransactionId,
     });
 
     return {
       success: true,
       paymentReference: payment.paymentReference,
-      sayeleTransactionId,
+      saraliTransactionId,
     };
   },
 });
@@ -202,7 +202,7 @@ export const getBillProviders = query({
     ),
   },
   handler: async (ctx, args) => {
-    // TODO: This should be configurable or fetched from SAYELE API
+    // TODO: This should be configurable or fetched from Sarali API
     // For now, returning static data based on bill type
 
     const providers: Record<string, string[]> = {

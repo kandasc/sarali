@@ -185,7 +185,7 @@ export default defineSchema({
     fees: v.number(),
     totalAmount: v.number(),
     paymentReference: v.string(),
-    sayeleTransactionId: v.optional(v.string()),
+    saraliTransactionId: v.optional(v.string()),
     status: v.union(
       v.literal("PENDING"),
       v.literal("PROCESSING"),
@@ -199,7 +199,7 @@ export default defineSchema({
     .index("by_reference", ["paymentReference"])
     .index("by_phone", ["customerPhone"])
     .index("by_status", ["status"])
-    .index("by_sayele_id", ["sayeleTransactionId"]),
+    .index("by_sarali_id", ["saraliTransactionId"]),
 
   bulkPayments: defineTable({
     batchReference: v.string(),

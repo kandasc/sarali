@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth.ts";
-import { Building2, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { Button } from "./ui/button.tsx";
 import { RoleSimulationBanner } from "./role-simulation-banner.tsx";
 import LanguageSwitcher from "./ui/language-switcher.tsx";
@@ -25,7 +25,7 @@ export default function DashboardLayout({
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Building2 className="h-6 w-6 text-primary" />
+              <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
               <span className="text-xl font-bold">{t("app.name")}</span>
             </div>
             <div className="h-6 w-px bg-border" />

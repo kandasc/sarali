@@ -16,8 +16,10 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import LanguageSwitcher from "@/components/ui/language-switcher.tsx";
 import Footer from "@/components/footer.tsx";
+import { useTranslation } from "react-i18next";
 
 export default function PaymentSuccessPage() {
+  const { t } = useTranslation("payment");
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const paymentReference = searchParams.get("ref");
@@ -197,11 +199,11 @@ export default function PaymentSuccessPage() {
                   <p className="font-medium">{payment.customerPhone}</p>
                 </div>
 
-                {payment.sayeleTransactionId && (
+                {payment.saraliTransactionId && (
                   <div className="space-y-1 md:col-span-2">
-                    <p className="text-sm text-muted-foreground">ID Transaction SAYELE</p>
+                    <p className="text-sm text-muted-foreground">{t("success.saraliId")}</p>
                     <p className="font-medium font-mono text-primary">
-                      {payment.sayeleTransactionId}
+                      {payment.saraliTransactionId}
                     </p>
                   </div>
                 )}

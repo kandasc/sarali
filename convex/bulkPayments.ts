@@ -153,7 +153,7 @@ export const createBulkPayment = mutation({
   },
 });
 
-// Process bulk payment (this will be connected to SAYELE API later)
+// Process bulk payment (this will be connected to Sarali API later)
 export const processBulkPayment = mutation({
   args: {
     bulkPaymentId: v.id("bulkPayments"),
@@ -204,7 +204,7 @@ export const processBulkPayment = mutation({
       processedAt: Date.now(),
     });
 
-    // TODO: Integrate with SAYELE API
+    // TODO: Integrate with Sarali API
     // For now, just mark all items as completed
     const items = await ctx.db
       .query("bulkPaymentItems")
@@ -217,7 +217,7 @@ export const processBulkPayment = mutation({
     let failedCount = 0;
 
     for (const item of items) {
-      // Simulate API call (replace with actual SAYELE API integration)
+      // Simulate API call (replace with actual Sarali API integration)
       const success = Math.random() > 0.1; // 90% success rate for simulation
 
       if (success) {
