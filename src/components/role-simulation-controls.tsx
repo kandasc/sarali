@@ -24,6 +24,7 @@ import { Eye, History } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useNavigate, useParams } from "react-router-dom";
 
 export function RoleSimulationControls() {
   const [open, setOpen] = useState(false);
@@ -32,6 +33,8 @@ export function RoleSimulationControls() {
   const [reason, setReason] = useState("");
   const startSimulation = useMutation(api.roleSimulation.startSimulation);
   const history = useQuery(api.roleSimulation.getSimulationHistory, {});
+  const navigate = useNavigate();
+  const { lng } = useParams<{ lng: string }>();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -52,6 +55,16 @@ export function RoleSimulationControls() {
       setOpen(false);
       setSimulatedRole("");
       setReason("");
+      
+      // Navigate to the appropriate dashboard based on simulated role
+      const langPrefix = lng ? `/${lng}` : "/fr";
+      if (simulatedRole === "MANAGER") {
+        navigate(`${langPrefix}/manager`);
+      } else if (simulatedRole === "CHEF_AGENCE") {
+        navigate(`${langPrefix}/agency`);
+      } else if (simulatedRole === "CAISSIER") {
+        navigate(`${langPrefix}/cashier`);
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Erreur lors du démarrage"
