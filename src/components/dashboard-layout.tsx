@@ -5,6 +5,7 @@ import { RoleSimulationBanner } from "./role-simulation-banner.tsx";
 import LanguageSwitcher from "./ui/language-switcher.tsx";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
+import Footer from "./footer.tsx";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -51,10 +52,13 @@ export default function DashboardLayout({
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 min-h-[calc(100vh-180px)]">
         <RoleSimulationBanner />
         {children}
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
