@@ -5,12 +5,12 @@ export default function Footer() {
         <div className="text-center text-sm text-muted-foreground">
           Made by{" "}
           <a
-            href="https://sarali.co"
+            href="https://sayele.co"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-foreground hover:underline"
           >
-            Sarali
+            SAYELE
           </a>
         </div>
       </div>

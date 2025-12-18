@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Building2, CheckCircle, Download, Home } from "lucide-react";
+import { CheckCircle, Download, Home } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -68,8 +68,8 @@ export default function PaymentSuccessPage() {
         <nav className="border-b bg-background/80 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold">SAYELE Hub</span>
+              <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
+              <span className="text-2xl font-bold">Sarali</span>
             </div>
             <LanguageSwitcher />
           </div>
@@ -107,8 +107,8 @@ export default function PaymentSuccessPage() {
       <nav className="border-b bg-background/80 backdrop-blur-sm print:hidden">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Building2 className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">SAYELE Hub</span>
+            <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
+            <span className="text-2xl font-bold">Sarali</span>
             <span className="ml-2 text-muted-foreground">• Confirmation de Paiement</span>
           </div>
           <LanguageSwitcher />

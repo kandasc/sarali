@@ -99,7 +99,7 @@ export default function PublicPaymentPage() {
   );
 
   // Default branding
-  const brandName = agencyBranding?.brandName || "SAYELE Hub";
+  const brandName = agencyBranding?.brandName || "Sarali";
   const brandLogoUrl = agencyBranding?.brandLogoUrl;
   const brandPrimaryColor = agencyBranding?.brandPrimaryColor;
   const brandWebsite = agencyBranding?.brandWebsite;
