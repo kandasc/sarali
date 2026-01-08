@@ -245,6 +245,11 @@ export const createTransfer = mutation({
       v.literal("OTHER")
     ),
     description: v.optional(v.string()),
+    // IMTO specific fields
+    imtoReferenceNumber: v.optional(v.string()),
+    imtoSenderFirstName: v.optional(v.string()),
+    imtoSenderLastName: v.optional(v.string()),
+    imtoOriginCountry: v.optional(v.string()),
     receiptStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
@@ -287,6 +292,10 @@ export const createTransfer = mutation({
       reference,
       imto: args.imto,
       description: args.description,
+      imtoReferenceNumber: args.imtoReferenceNumber,
+      imtoSenderFirstName: args.imtoSenderFirstName,
+      imtoSenderLastName: args.imtoSenderLastName,
+      imtoOriginCountry: args.imtoOriginCountry,
       receiptStorageId: args.receiptStorageId,
       status: "COMPLETED",
       processedBy: currentUser._id,
@@ -330,6 +339,11 @@ export const createPayment = mutation({
       v.literal("MOOV_MONEY"),
       v.literal("OTHER")
     )),
+    // IMTO specific fields
+    imtoReferenceNumber: v.optional(v.string()),
+    imtoSenderFirstName: v.optional(v.string()),
+    imtoSenderLastName: v.optional(v.string()),
+    imtoOriginCountry: v.optional(v.string()),
     receiptStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
@@ -370,6 +384,10 @@ export const createPayment = mutation({
       reference,
       description: args.description,
       imto: args.imto,
+      imtoReferenceNumber: args.imtoReferenceNumber,
+      imtoSenderFirstName: args.imtoSenderFirstName,
+      imtoSenderLastName: args.imtoSenderLastName,
+      imtoOriginCountry: args.imtoOriginCountry,
       receiptStorageId: args.receiptStorageId,
       status: "COMPLETED",
       processedBy: currentUser._id,

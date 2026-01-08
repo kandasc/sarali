@@ -120,6 +120,11 @@ export default defineSchema({
       v.literal("MOOV_MONEY"),
       v.literal("OTHER")
     )),
+    // IMTO specific fields
+    imtoReferenceNumber: v.optional(v.string()), // MTCN for WU, Ref for MoneyGram, PIN for Ria
+    imtoSenderFirstName: v.optional(v.string()),
+    imtoSenderLastName: v.optional(v.string()),
+    imtoOriginCountry: v.optional(v.string()),
     receiptStorageId: v.optional(v.id("_storage")),
     status: v.union(
       v.literal("PENDING"),

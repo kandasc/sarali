@@ -88,6 +88,43 @@ const transferSchema = z.object({
     "Le montant doit être positif"
   ),
   description: z.string().optional(),
+  // IMTO specific fields
+  imtoReferenceNumber: z.string().optional(),
+  imtoSenderFirstName: z.string().optional(),
+  imtoSenderLastName: z.string().optional(),
+  imtoOriginCountry: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // Validation conditionnelle pour Western Union, MoneyGram, Ria
+  if (data.imto === "WESTERN_UNION" || data.imto === "MONEYGRAM" || data.imto === "RIA") {
+    if (!data.imtoReferenceNumber) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le numéro de référence est requis",
+        path: ["imtoReferenceNumber"],
+      });
+    }
+    if (!data.imtoSenderFirstName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le prénom de l'expéditeur est requis",
+        path: ["imtoSenderFirstName"],
+      });
+    }
+    if (!data.imtoSenderLastName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le nom de l'expéditeur est requis",
+        path: ["imtoSenderLastName"],
+      });
+    }
+    if (!data.imtoOriginCountry) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le pays d'origine est requis",
+        path: ["imtoOriginCountry"],
+      });
+    }
+  }
 });
 
 const paymentSchema = z.object({
@@ -109,6 +146,43 @@ const paymentSchema = z.object({
     "Le montant doit être positif"
   ),
   description: z.string().min(3, "Description requise"),
+  // IMTO specific fields
+  imtoReferenceNumber: z.string().optional(),
+  imtoSenderFirstName: z.string().optional(),
+  imtoSenderLastName: z.string().optional(),
+  imtoOriginCountry: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // Validation conditionnelle pour Western Union, MoneyGram, Ria
+  if (data.imto === "WESTERN_UNION" || data.imto === "MONEYGRAM" || data.imto === "RIA") {
+    if (!data.imtoReferenceNumber) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le numéro de référence est requis",
+        path: ["imtoReferenceNumber"],
+      });
+    }
+    if (!data.imtoSenderFirstName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le prénom de l'expéditeur est requis",
+        path: ["imtoSenderFirstName"],
+      });
+    }
+    if (!data.imtoSenderLastName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le nom de l'expéditeur est requis",
+        path: ["imtoSenderLastName"],
+      });
+    }
+    if (!data.imtoOriginCountry) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le pays d'origine est requis",
+        path: ["imtoOriginCountry"],
+      });
+    }
+  }
 });
 
 type DepositValues = z.infer<typeof depositSchema>;
@@ -181,6 +255,10 @@ export default function TransactionsModuleTab() {
       imto: "WESTERN_UNION",
       amount: "",
       description: "",
+      imtoReferenceNumber: "",
+      imtoSenderFirstName: "",
+      imtoSenderLastName: "",
+      imtoOriginCountry: "",
     },
   });
 
@@ -193,6 +271,10 @@ export default function TransactionsModuleTab() {
       imto: undefined,
       amount: "",
       description: "",
+      imtoReferenceNumber: "",
+      imtoSenderFirstName: "",
+      imtoSenderLastName: "",
+      imtoOriginCountry: "",
     },
   });
 
@@ -255,6 +337,10 @@ export default function TransactionsModuleTab() {
         amount: Number(values.amount),
         imto: values.imto,
         description: values.description,
+        imtoReferenceNumber: values.imtoReferenceNumber,
+        imtoSenderFirstName: values.imtoSenderFirstName,
+        imtoSenderLastName: values.imtoSenderLastName,
+        imtoOriginCountry: values.imtoOriginCountry,
         receiptStorageId: transferReceiptId,
       });
 
@@ -280,6 +366,10 @@ export default function TransactionsModuleTab() {
         amount: Number(values.amount),
         description: values.description,
         imto: values.imto,
+        imtoReferenceNumber: values.imtoReferenceNumber,
+        imtoSenderFirstName: values.imtoSenderFirstName,
+        imtoSenderLastName: values.imtoSenderLastName,
+        imtoOriginCountry: values.imtoOriginCountry,
         receiptStorageId: paymentReceiptId,
       });
 
@@ -753,6 +843,92 @@ export default function TransactionsModuleTab() {
                   )}
                 />
 
+                {/* Champs spécifiques pour Western Union, MoneyGram, Ria */}
+                {(transferForm.watch("imto") === "WESTERN_UNION" || 
+                  transferForm.watch("imto") === "MONEYGRAM" || 
+                  transferForm.watch("imto") === "RIA") && (
+                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+                    <h4 className="font-medium text-sm">
+                      Informations {
+                        transferForm.watch("imto") === "WESTERN_UNION" ? "Western Union" :
+                        transferForm.watch("imto") === "MONEYGRAM" ? "MoneyGram" : "Ria"
+                      }
+                    </h4>
+
+                    <FormField
+                      control={transferForm.control}
+                      name="imtoReferenceNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {transferForm.watch("imto") === "WESTERN_UNION" && "MTCN (10 chiffres)"}
+                            {transferForm.watch("imto") === "MONEYGRAM" && "Référence (8 chiffres)"}
+                            {transferForm.watch("imto") === "RIA" && "PIN (16 chiffres)"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder={
+                                transferForm.watch("imto") === "WESTERN_UNION" ? "1234567890" :
+                                transferForm.watch("imto") === "MONEYGRAM" ? "12345678" : "1234567890123456"
+                              }
+                              maxLength={
+                                transferForm.watch("imto") === "WESTERN_UNION" ? 10 :
+                                transferForm.watch("imto") === "MONEYGRAM" ? 8 : 16
+                              }
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={transferForm.control}
+                        name="imtoSenderFirstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Prénom Expéditeur</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Jean" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={transferForm.control}
+                        name="imtoSenderLastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom Expéditeur</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Dupont" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={transferForm.control}
+                      name="imtoOriginCountry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pays d'Origine</FormLabel>
+                          <FormControl>
+                            <Input placeholder="France, États-Unis, Sénégal..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
                 <FormField
                   control={transferForm.control}
                   name="amount"
@@ -906,6 +1082,92 @@ export default function TransactionsModuleTab() {
                     </FormItem>
                   )}
                 />
+
+                {/* Champs spécifiques pour Western Union, MoneyGram, Ria */}
+                {(paymentForm.watch("imto") === "WESTERN_UNION" || 
+                  paymentForm.watch("imto") === "MONEYGRAM" || 
+                  paymentForm.watch("imto") === "RIA") && (
+                  <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+                    <h4 className="font-medium text-sm">
+                      Informations {
+                        paymentForm.watch("imto") === "WESTERN_UNION" ? "Western Union" :
+                        paymentForm.watch("imto") === "MONEYGRAM" ? "MoneyGram" : "Ria"
+                      }
+                    </h4>
+
+                    <FormField
+                      control={paymentForm.control}
+                      name="imtoReferenceNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {paymentForm.watch("imto") === "WESTERN_UNION" && "MTCN (10 chiffres)"}
+                            {paymentForm.watch("imto") === "MONEYGRAM" && "Référence (8 chiffres)"}
+                            {paymentForm.watch("imto") === "RIA" && "PIN (16 chiffres)"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder={
+                                paymentForm.watch("imto") === "WESTERN_UNION" ? "1234567890" :
+                                paymentForm.watch("imto") === "MONEYGRAM" ? "12345678" : "1234567890123456"
+                              }
+                              maxLength={
+                                paymentForm.watch("imto") === "WESTERN_UNION" ? 10 :
+                                paymentForm.watch("imto") === "MONEYGRAM" ? 8 : 16
+                              }
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={paymentForm.control}
+                        name="imtoSenderFirstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Prénom Expéditeur</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Jean" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={paymentForm.control}
+                        name="imtoSenderLastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom Expéditeur</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Dupont" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={paymentForm.control}
+                      name="imtoOriginCountry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pays d'Origine</FormLabel>
+                          <FormControl>
+                            <Input placeholder="France, États-Unis, Sénégal..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
 
                 <FormField
                   control={paymentForm.control}
