@@ -22,6 +22,13 @@ import {
 } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { toast } from "sonner";
 import {
@@ -66,6 +73,16 @@ const transferSchema = z.object({
   customerIdNumber: z.string().optional(),
   recipientName: z.string().min(2, "Le nom du destinataire est requis"),
   recipientPhone: z.string().min(8, "Numéro de téléphone invalide"),
+  imto: z.enum([
+    "WESTERN_UNION",
+    "MONEYGRAM",
+    "RIA",
+    "WAVE",
+    "ORANGE_MONEY",
+    "MTN_MOBILE_MONEY",
+    "MOOV_MONEY",
+    "OTHER"
+  ], { required_error: "Sélectionnez un opérateur" }),
   amount: z.string().min(1, "Montant requis").refine(
     (val) => !isNaN(Number(val)) && Number(val) > 0,
     "Le montant doit être positif"
@@ -77,6 +94,16 @@ const paymentSchema = z.object({
   customerName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   customerPhone: z.string().min(8, "Numéro de téléphone invalide"),
   customerIdNumber: z.string().optional(),
+  imto: z.enum([
+    "WESTERN_UNION",
+    "MONEYGRAM",
+    "RIA",
+    "WAVE",
+    "ORANGE_MONEY",
+    "MTN_MOBILE_MONEY",
+    "MOOV_MONEY",
+    "OTHER"
+  ]).optional(),
   amount: z.string().min(1, "Montant requis").refine(
     (val) => !isNaN(Number(val)) && Number(val) > 0,
     "Le montant doit être positif"
@@ -88,6 +115,18 @@ type DepositValues = z.infer<typeof depositSchema>;
 type WithdrawalValues = z.infer<typeof withdrawalSchema>;
 type TransferValues = z.infer<typeof transferSchema>;
 type PaymentValues = z.infer<typeof paymentSchema>;
+
+// IMTO labels
+const imtoLabels: Record<string, string> = {
+  WESTERN_UNION: "Western Union",
+  MONEYGRAM: "MoneyGram",
+  RIA: "Ria",
+  WAVE: "Wave",
+  ORANGE_MONEY: "Orange Money",
+  MTN_MOBILE_MONEY: "MTN Mobile Money",
+  MOOV_MONEY: "Moov Money",
+  OTHER: "Autre",
+};
 
 export default function TransactionsModuleTab() {
   const transactions = useQuery(api.transactions.listTransactions, { limit: 20 });
@@ -139,6 +178,7 @@ export default function TransactionsModuleTab() {
       customerIdNumber: "",
       recipientName: "",
       recipientPhone: "",
+      imto: "WESTERN_UNION",
       amount: "",
       description: "",
     },
@@ -150,6 +190,7 @@ export default function TransactionsModuleTab() {
       customerName: "",
       customerPhone: "",
       customerIdNumber: "",
+      imto: undefined,
       amount: "",
       description: "",
     },
@@ -212,6 +253,7 @@ export default function TransactionsModuleTab() {
         recipientName: values.recipientName,
         recipientPhone: values.recipientPhone,
         amount: Number(values.amount),
+        imto: values.imto,
         description: values.description,
         receiptStorageId: transferReceiptId,
       });
@@ -237,6 +279,7 @@ export default function TransactionsModuleTab() {
         customerIdNumber: values.customerIdNumber,
         amount: Number(values.amount),
         description: values.description,
+        imto: values.imto,
         receiptStorageId: paymentReceiptId,
       });
 
@@ -684,6 +727,34 @@ export default function TransactionsModuleTab() {
 
                 <FormField
                   control={transferForm.control}
+                  name="imto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Opérateur de Transfert (IMTO)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner l'opérateur" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="WESTERN_UNION">{imtoLabels.WESTERN_UNION}</SelectItem>
+                          <SelectItem value="MONEYGRAM">{imtoLabels.MONEYGRAM}</SelectItem>
+                          <SelectItem value="RIA">{imtoLabels.RIA}</SelectItem>
+                          <SelectItem value="WAVE">{imtoLabels.WAVE}</SelectItem>
+                          <SelectItem value="ORANGE_MONEY">{imtoLabels.ORANGE_MONEY}</SelectItem>
+                          <SelectItem value="MTN_MOBILE_MONEY">{imtoLabels.MTN_MOBILE_MONEY}</SelectItem>
+                          <SelectItem value="MOOV_MONEY">{imtoLabels.MOOV_MONEY}</SelectItem>
+                          <SelectItem value="OTHER">{imtoLabels.OTHER}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={transferForm.control}
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
@@ -800,6 +871,37 @@ export default function TransactionsModuleTab() {
                       <FormControl>
                         <Input placeholder="CNI123456" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={paymentForm.control}
+                  name="imto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Opérateur de Transfert (optionnel)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner l'opérateur (optionnel)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="WESTERN_UNION">{imtoLabels.WESTERN_UNION}</SelectItem>
+                          <SelectItem value="MONEYGRAM">{imtoLabels.MONEYGRAM}</SelectItem>
+                          <SelectItem value="RIA">{imtoLabels.RIA}</SelectItem>
+                          <SelectItem value="WAVE">{imtoLabels.WAVE}</SelectItem>
+                          <SelectItem value="ORANGE_MONEY">{imtoLabels.ORANGE_MONEY}</SelectItem>
+                          <SelectItem value="MTN_MOBILE_MONEY">{imtoLabels.MTN_MOBILE_MONEY}</SelectItem>
+                          <SelectItem value="MOOV_MONEY">{imtoLabels.MOOV_MONEY}</SelectItem>
+                          <SelectItem value="OTHER">{imtoLabels.OTHER}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Sélectionnez l'opérateur si le paiement implique un transfert d'argent
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -970,6 +1072,12 @@ export default function TransactionsModuleTab() {
                       {tx.recipientName && (
                         <p className="text-xs text-muted-foreground">
                           → {tx.recipientName} ({tx.recipientPhone})
+                        </p>
+                      )}
+
+                      {tx.imto && (
+                        <p className="text-xs text-muted-foreground">
+                          via {imtoLabels[tx.imto] || tx.imto}
                         </p>
                       )}
 

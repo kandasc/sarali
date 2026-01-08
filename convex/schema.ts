@@ -110,6 +110,16 @@ export default defineSchema({
     description: v.optional(v.string()),
     recipientName: v.optional(v.string()),
     recipientPhone: v.optional(v.string()),
+    imto: v.optional(v.union(
+      v.literal("WESTERN_UNION"),
+      v.literal("MONEYGRAM"),
+      v.literal("RIA"),
+      v.literal("WAVE"),
+      v.literal("ORANGE_MONEY"),
+      v.literal("MTN_MOBILE_MONEY"),
+      v.literal("MOOV_MONEY"),
+      v.literal("OTHER")
+    )),
     receiptStorageId: v.optional(v.id("_storage")),
     status: v.union(
       v.literal("PENDING"),
