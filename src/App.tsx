@@ -20,8 +20,11 @@ import AgencyDashboard from "./pages/agency/page.tsx";
 import CashierDashboard from "./pages/cashier/page.tsx";
 import PublicPaymentPage from "./pages/pay/page.tsx";
 import PaymentSuccessPage from "./pages/pay/success.tsx";
+import { useServiceWorker } from "./hooks/use-service-worker.ts";
 
 export default function App() {
+  useServiceWorker();
+  
   return (
     <DefaultProviders>
       <BrowserRouter>
