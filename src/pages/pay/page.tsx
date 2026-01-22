@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2 } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -479,6 +479,87 @@ export default function PublicPaymentPage() {
                 </div>
               </CardContent>
             </Card>
+          )}
+          
+          {/* Featured Section - Leadway Assurance */}
+          {!selectedBiller && !selectedCategory && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-foreground mb-1">
+                  {t("featured.title")}
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  {t("featured.subtitle")}
+                </p>
+              </div>
+              
+              <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-green-50/30 dark:from-emerald-950/20 dark:to-green-950/10 dark:border-emerald-800">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Leadway Branding */}
+                    <div className="flex-shrink-0 text-center md:text-left">
+                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-emerald-600 mb-3">
+                        <Shield className="h-10 w-10 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                        Leadway Assurance
+                      </h3>
+                      <p className="text-sm text-emerald-600 dark:text-emerald-500 mb-3">
+                        {t("featured.insurance")}
+                      </p>
+                      <a
+                        href="https://ci.leadway.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                      >
+                        ci.leadway.com →
+                      </a>
+                    </div>
+                    
+                    {/* Insurance Products Grid */}
+                    <div className="flex-1">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {[
+                          { name: "Auto / Moto", icon: <Car className="h-5 w-5" />, desc: "Assurance automobile" },
+                          { name: "Santé", icon: <Heart className="h-5 w-5" />, desc: "Couverture santé" },
+                          { name: "Voyage", icon: <Plane className="h-5 w-5" />, desc: "Assurance voyage" },
+                          { name: "Habitation", icon: <Home className="h-5 w-5" />, desc: "Protection maison" },
+                          { name: "Éducation", icon: <GraduationCap className="h-5 w-5" />, desc: "Épargne éducation" },
+                          { name: "Vie", icon: <Users className="h-5 w-5" />, desc: "Assurance vie" },
+                          { name: "Retraite", icon: <Shield className="h-5 w-5" />, desc: "Prévoyance" },
+                          { name: "Queen", icon: <Heart className="h-5 w-5" />, desc: "Pour les femmes" },
+                        ].map((product, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              toast.info(`${t("featured.payPremium")} - ${product.name}`, {
+                                description: "Contactez Leadway pour plus d'informations",
+                              });
+                              window.open("https://ci.leadway.com", "_blank");
+                            }}
+                            className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all group"
+                          >
+                            <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                              {product.icon}
+                            </div>
+                            <div className="text-center">
+                              <p className="font-medium text-sm text-foreground">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">{product.desc}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      
+                      <div className="mt-4 flex items-center justify-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
+                        <Shield className="h-4 w-4" />
+                        <span>Protection complète • Devis instantané • Service Leely WhatsApp</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Step 1: Category Selection */}

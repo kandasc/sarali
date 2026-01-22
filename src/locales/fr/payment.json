@@ -1,6 +1,10 @@
 {
   "title": "Payer vos Factures",
   "subtitle": "Paiement rapide et sécurisé via Sarali",
+  "featured.title": "Services en vedette",
+  "featured.subtitle": "Accédez rapidement aux services les plus populaires",
+  "featured.payPremium": "Payer ma prime",
+  "featured.insurance": "Assurance",
   "search.placeholder": "Rechercher un fournisseur ou demander à l'IA (ex: je veux payer ma facture d'électricité)",
   "search.searching": "Recherche en cours...",
   "search.noResults": "Aucun résultat trouvé",

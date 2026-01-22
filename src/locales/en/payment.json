@@ -1,6 +1,10 @@
 {
   "title": "Pay Your Bills",
   "subtitle": "Fast and secure payment via Sarali",
+  "featured.title": "Featured Services",
+  "featured.subtitle": "Quick access to the most popular services",
+  "featured.payPremium": "Pay my premium",
+  "featured.insurance": "Insurance",
   "search.placeholder": "Search for a provider or ask AI (ex: I want to pay my electricity bill)",
   "search.searching": "Searching...",
   "search.noResults": "No results found",
