@@ -25,7 +25,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import LanguageSwitcher from "@/components/ui/language-switcher.tsx";
 import { useTranslation } from "react-i18next";
 import Footer from "@/components/footer.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
@@ -311,7 +310,6 @@ export default function PublicPaymentPage() {
                 );
               })()}
             </Authenticated>
-            <LanguageSwitcher />
           </div>
         </div>
       </nav>
