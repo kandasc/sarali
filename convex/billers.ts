@@ -389,3 +389,26 @@ export const getBillerById = query({
     };
   },
 });
+
+// Get all active billers (public - for AI search)
+export const listAllActiveBillers = query({
+  args: {},
+  handler: async (ctx): Promise<Array<{
+    _id: string;
+    name: string;
+    category: string;
+    description?: string;
+  }>> => {
+    const billers = await ctx.db
+      .query("billers")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .collect();
+
+    return billers.map((b) => ({
+      _id: b._id,
+      name: b.name,
+      category: b.category,
+      description: b.description,
+    }));
+  },
+});

@@ -1,6 +1,12 @@
 {
   "title": "Payer vos Factures",
   "subtitle": "Paiement rapide et sécurisé via Sarali",
+  "search.placeholder": "Rechercher un fournisseur ou demander à l'IA (ex: je veux payer ma facture d'électricité)",
+  "search.searching": "Recherche en cours...",
+  "search.noResults": "Aucun résultat trouvé",
+  "search.aiResponse": "Suggestion IA",
+  "search.selectCategory": "Sélectionner une catégorie",
+  "search.selectBiller": "Sélectionner ce fournisseur",
   "form.title": "Informations de Paiement",
   "form.description": "Remplissez les informations ci-dessous pour effectuer votre paiement",
   "billType.label": "Type de Facture",

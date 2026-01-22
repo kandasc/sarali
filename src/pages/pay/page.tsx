@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -30,6 +30,7 @@ import { useTranslation } from "react-i18next";
 import Footer from "@/components/footer.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Authenticated, Unauthenticated } from "convex/react";
+import { useDebounce } from "@/hooks/use-debounce.ts";
 
 const paymentSchema = z.object({
   billReference: z.string().min(1, "Référence de facture requise"),
@@ -78,6 +79,17 @@ export default function PublicPaymentPage() {
     feeFixed?: number;
   } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<{
+    category: string | null;
+    suggestions: Array<{ billerId: string; name: string; category: string; confidence: number }>;
+    response: string;
+  } | null>(null);
+  
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
 
   // Get current user for dashboard link - safe for unauthenticated users
   const currentUser = useQuery(api.users.getCurrentUserOrNull);
@@ -104,6 +116,12 @@ export default function PublicPaymentPage() {
     api.billers.listActiveBillers,
     selectedCategory ? { category: selectedCategory } : "skip"
   );
+  
+  // Get all billers for search filtering
+  const allBillers = useQuery(api.billers.listActiveBillers, {});
+  
+  // AI search action
+  const searchBillersWithAI = useAction(api.billerSearch.searchBillersWithAI);
 
   const initiateBillPayment = useMutation(api.billPayments.initiateBillPayment);
   const processBillPayment = useMutation(api.billPayments.processBillPayment);
@@ -181,6 +199,54 @@ export default function PublicPaymentPage() {
   const handleBackToBillers = () => {
     setSelectedBiller(null);
   };
+  
+  // Handle AI search
+  useEffect(() => {
+    const performSearch = async () => {
+      if (debouncedSearchQuery.length < 3) {
+        setSearchResults(null);
+        return;
+      }
+      
+      setIsSearching(true);
+      try {
+        const results = await searchBillersWithAI({ query: debouncedSearchQuery });
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Search error:", error);
+        toast.error("Erreur lors de la recherche");
+      } finally {
+        setIsSearching(false);
+      }
+    };
+    
+    performSearch();
+  }, [debouncedSearchQuery, searchBillersWithAI]);
+  
+  // Handle search result selection
+  const handleSelectSearchResult = (billerId: string) => {
+    const biller = allBillers?.find((b) => b._id === billerId);
+    if (biller) {
+      setSelectedCategory(biller.category as BillCategory);
+      setSelectedBiller({
+        id: biller._id,
+        name: biller.name,
+        category: biller.category as BillCategory,
+        logoUrl: biller.logoUrl,
+        feePercentage: biller.feePercentage,
+        feeFixed: biller.feeFixed,
+      });
+      setSearchQuery("");
+      setSearchResults(null);
+    }
+  };
+  
+  // Simple text filtering (when AI search hasn't triggered yet)
+  const filteredBillers = searchQuery.length > 0 && searchQuery.length < 3 && allBillers
+    ? allBillers.filter((b) =>
+        b.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
@@ -255,9 +321,9 @@ export default function PublicPaymentPage() {
         <div className="mx-auto max-w-5xl space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold">Payer vos Factures</h1>
+            <h1 className="text-4xl font-bold">{t("title")}</h1>
             <p className="text-muted-foreground">
-              Paiement rapide et sécurisé via SAYELE gate
+              {t("subtitle")}
             </p>
             {brandWebsite && (
               <p className="text-sm">
@@ -272,6 +338,148 @@ export default function PublicPaymentPage() {
               </p>
             )}
           </div>
+          
+          {/* AI Search Bar */}
+          {!selectedBiller && (
+            <Card className="border-primary/30 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="relative">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        placeholder={t("search.placeholder")}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 pr-10 h-12 text-base"
+                      />
+                      {isSearching && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+                      )}
+                      {searchQuery && !isSearching && (
+                        <button
+                          onClick={() => {
+                            setSearchQuery("");
+                            setSearchResults(null);
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    <Button
+                      variant="default"
+                      size="lg"
+                      disabled={!searchQuery || isSearching}
+                      className="gap-2"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {isSearching ? t("search.searching") : "AI"}
+                    </Button>
+                  </div>
+                  
+                  {/* Search Results */}
+                  {(searchResults || filteredBillers) && (
+                    <div className="mt-4 space-y-3">
+                      {searchResults?.response && (
+                        <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                          <div className="flex items-start gap-2">
+                            <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium text-primary mb-1">
+                                {t("search.aiResponse")}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {searchResults.response}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {searchResults?.suggestions && searchResults.suggestions.length > 0 && (
+                        <div className="grid gap-2">
+                          {searchResults.suggestions.slice(0, 5).map((suggestion) => {
+                            const biller = allBillers?.find((b) => b._id === suggestion.billerId);
+                            if (!biller) return null;
+                            
+                            return (
+                              <button
+                                key={suggestion.billerId}
+                                onClick={() => handleSelectSearchResult(suggestion.billerId)}
+                                className="flex items-center gap-4 p-4 rounded-lg border-2 border-muted hover:border-primary hover:bg-primary/5 transition-all text-left"
+                              >
+                                {biller.logoUrl ? (
+                                  <img
+                                    src={biller.logoUrl}
+                                    alt={biller.name}
+                                    className="h-12 w-12 object-contain"
+                                  />
+                                ) : (
+                                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                                    <Building2 className="h-6 w-6 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <div className="flex-1">
+                                  <p className="font-medium">{biller.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {categoryLabels[biller.category as BillCategory]}
+                                  </p>
+                                </div>
+                                <span className="text-xs text-primary">
+                                  {t("search.selectBiller")} →
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
+                      {filteredBillers && filteredBillers.length > 0 && !searchResults && (
+                        <div className="grid gap-2">
+                          {filteredBillers.slice(0, 5).map((biller) => (
+                            <button
+                              key={biller._id}
+                              onClick={() => handleSelectSearchResult(biller._id)}
+                              className="flex items-center gap-4 p-4 rounded-lg border-2 border-muted hover:border-primary hover:bg-primary/5 transition-all text-left"
+                            >
+                              {biller.logoUrl ? (
+                                <img
+                                  src={biller.logoUrl}
+                                  alt={biller.name}
+                                  className="h-12 w-12 object-contain"
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                                  <Building2 className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <p className="font-medium">{biller.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {categoryLabels[biller.category as BillCategory]}
+                                </p>
+                              </div>
+                              <span className="text-xs text-primary">
+                                {t("search.selectBiller")} →
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {searchResults?.suggestions && searchResults.suggestions.length === 0 && (
+                        <p className="text-center text-sm text-muted-foreground py-4">
+                          {t("search.noResults")}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Step 1: Category Selection */}
           {!selectedCategory && (

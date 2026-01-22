@@ -1,6 +1,12 @@
 {
   "title": "Pay Your Bills",
   "subtitle": "Fast and secure payment via Sarali",
+  "search.placeholder": "Search for a provider or ask AI (ex: I want to pay my electricity bill)",
+  "search.searching": "Searching...",
+  "search.noResults": "No results found",
+  "search.aiResponse": "AI Suggestion",
+  "search.selectCategory": "Select category",
+  "search.selectBiller": "Select this provider",
   "form.title": "Payment Information",
   "form.description": "Fill in the information below to make your payment",
   "billType.label": "Bill Type",

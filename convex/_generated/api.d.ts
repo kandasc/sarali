@@ -13,6 +13,7 @@ import type * as agenciesStats from "../agenciesStats.js";
 import type * as agencyDashboard from "../agencyDashboard.js";
 import type * as analytics from "../analytics.js";
 import type * as billPayments from "../billPayments.js";
+import type * as billerSearch from "../billerSearch.js";
 import type * as billers from "../billers.js";
 import type * as bulkPayments from "../bulkPayments.js";
 import type * as cashierDashboard from "../cashierDashboard.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   agencyDashboard: typeof agencyDashboard;
   analytics: typeof analytics;
   billPayments: typeof billPayments;
+  billerSearch: typeof billerSearch;
   billers: typeof billers;
   bulkPayments: typeof bulkPayments;
   cashierDashboard: typeof cashierDashboard;
