@@ -98,7 +98,7 @@ const featuredByCountry: Record<Country, {
     company: "Crédit Rural de Guinée",
     description: "Institution de microfinance leader en Guinée",
     color: "amber",
-    website: "https://www.creditruraldeguinee.com",
+    website: "https://creditruralguinee.org",
     products: [
       { name: "Épargne", icon: <Shield className="h-5 w-5" />, desc: "Comptes d'épargne" },
       { name: "Crédit Agricole", icon: <Users className="h-5 w-5" />, desc: "Financement agricole" },
