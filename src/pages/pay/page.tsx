@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -63,11 +63,19 @@ const categoryLabels: Record<BillCategory, string> = {
   OTHER: "Autre",
 };
 
+type Country = "GN" | "CI";
+
+const countryConfig: Record<Country, { name: string; flag: string; currency: "XOF" | "GNF" }> = {
+  GN: { name: "Guinée", flag: "🇬🇳", currency: "GNF" },
+  CI: { name: "Côte d'Ivoire", flag: "🇨🇮", currency: "XOF" },
+};
+
 export default function PublicPaymentPage() {
   const { t } = useTranslation(["payment", "common"]);
   const navigate = useNavigate();
   const { agencyCode } = useParams<{ agencyCode?: string }>();
   const location = useLocation();
+  const [selectedCountry, setSelectedCountry] = useState<Country>("GN");
   const [selectedCategory, setSelectedCategory] = useState<BillCategory | null>(null);
   const [selectedBiller, setSelectedBiller] = useState<{
     id: Id<"billers">;
@@ -110,14 +118,14 @@ export default function PublicPaymentPage() {
   const brandPrimaryColor = agencyBranding?.brandPrimaryColor;
   const brandWebsite = agencyBranding?.brandWebsite;
 
-  // Get active billers for selected category
+  // Get active billers for selected category and country
   const billers = useQuery(
     api.billers.listActiveBillers,
-    selectedCategory ? { category: selectedCategory } : "skip"
+    selectedCategory ? { category: selectedCategory, country: selectedCountry } : "skip"
   );
   
-  // Get all billers for search filtering
-  const allBillers = useQuery(api.billers.listActiveBillers, {});
+  // Get all billers for search filtering (filtered by country)
+  const allBillers = useQuery(api.billers.listActiveBillers, { country: selectedCountry });
   
   // AI search action
   const searchBillersWithAI = useAction(api.billerSearch.searchBillersWithAI);
@@ -134,12 +142,22 @@ export default function PublicPaymentPage() {
   } = useForm<PaymentForm>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      currency: "XOF",
+      currency: countryConfig[selectedCountry].currency,
     },
   });
 
   const amount = watch("amount");
   const currency = watch("currency");
+  
+  // Update currency when country changes
+  useEffect(() => {
+    setValue("currency", countryConfig[selectedCountry].currency);
+    // Reset selections when country changes
+    setSelectedCategory(null);
+    setSelectedBiller(null);
+    setSearchQuery("");
+    setSearchResults(null);
+  }, [selectedCountry, setValue]);
 
   // Calculate fees and total
   const numAmount = parseFloat(amount) || 0;
@@ -336,6 +354,28 @@ export default function PublicPaymentPage() {
               </p>
             )}
           </div>
+          
+          {/* Country Selector */}
+          {!selectedBiller && (
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2 p-1 bg-muted rounded-lg">
+                {(Object.entries(countryConfig) as [Country, typeof countryConfig[Country]][]).map(([code, config]) => (
+                  <button
+                    key={code}
+                    onClick={() => setSelectedCountry(code)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all ${
+                      selectedCountry === code
+                        ? "bg-background shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <span className="text-lg">{config.flag}</span>
+                    <span className="font-medium">{t(`country.${code}`)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           
           {/* AI Search Bar */}
           {!selectedBiller && (

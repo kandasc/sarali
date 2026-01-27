@@ -1,6 +1,10 @@
 {
   "title": "Payer vos Factures",
   "subtitle": "Paiement rapide et sécurisé via Sarali",
+  "country.label": "Pays",
+  "country.select": "Sélectionnez votre pays",
+  "country.GN": "Guinée",
+  "country.CI": "Côte d'Ivoire",
   "featured.title": "Services en vedette",
   "featured.subtitle": "Accédez rapidement aux services les plus populaires",
   "featured.payPremium": "Payer ma prime",

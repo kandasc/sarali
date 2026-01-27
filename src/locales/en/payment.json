@@ -1,6 +1,10 @@
 {
   "title": "Pay Your Bills",
   "subtitle": "Fast and secure payment via Sarali",
+  "country.label": "Country",
+  "country.select": "Select your country",
+  "country.GN": "Guinea",
+  "country.CI": "Ivory Coast",
   "featured.title": "Featured Services",
   "featured.subtitle": "Quick access to the most popular services",
   "featured.payPremium": "Pay my premium",

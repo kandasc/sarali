@@ -294,23 +294,55 @@ function CreateBillerDialog() {
             <FormField
               control={form.control}
               name="countries"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <FormLabel>Pays</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ex: Côte d'Ivoire, Guinée"
-                      value={field.value?.join(", ")}
-                      onChange={(e) => {
-                        const countries = e.target.value
-                          .split(",")
-                          .map((c) => c.trim())
-                          .filter((c) => c);
-                        field.onChange(countries);
-                      }}
+                  <div className="flex gap-4">
+                    <FormField
+                      control={form.control}
+                      name="countries"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes("GN")}
+                              onCheckedChange={(checked) => {
+                                const value = field.value || [];
+                                if (checked) {
+                                  field.onChange([...value, "GN"]);
+                                } else {
+                                  field.onChange(value.filter((v) => v !== "GN"));
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">Guinée</FormLabel>
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormDescription>Séparez les pays par des virgules</FormDescription>
+                    <FormField
+                      control={form.control}
+                      name="countries"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes("CI")}
+                              onCheckedChange={(checked) => {
+                                const value = field.value || [];
+                                if (checked) {
+                                  field.onChange([...value, "CI"]);
+                                } else {
+                                  field.onChange(value.filter((v) => v !== "CI"));
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">Côte d'Ivoire</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -501,7 +533,11 @@ export default function BillersTab() {
                   <div>
                     <p className="text-sm font-medium">Pays</p>
                     <p className="text-sm text-muted-foreground">
-                      {biller.countries.join(", ")}
+                      {biller.countries.map((c) => {
+                        if (c === "GN") return "🇬🇳 Guinée";
+                        if (c === "CI") return "🇨🇮 Côte d'Ivoire";
+                        return c;
+                      }).join(", ")}
                     </p>
                   </div>
 
