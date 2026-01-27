@@ -170,7 +170,7 @@ export default defineSchema({
     logoStorageId: v.optional(v.id("_storage")),
     description: v.optional(v.string()),
     isActive: v.boolean(),
-    supportedCurrencies: v.array(v.union(v.literal("XOF"), v.literal("GNF"))),
+    supportedCurrencies: v.array(v.string()),
     countries: v.array(v.string()),
     feePercentage: v.optional(v.number()),
     feeFixed: v.optional(v.number()),

@@ -71,7 +71,7 @@ export const createBiller = mutation({
     logoStorageId: v.optional(v.id("_storage")),
     description: v.optional(v.string()),
     isActive: v.boolean(),
-    supportedCurrencies: v.array(v.union(v.literal("XOF"), v.literal("GNF"))),
+    supportedCurrencies: v.array(v.string()),
     countries: v.array(v.string()),
     feePercentage: v.optional(v.number()),
     feeFixed: v.optional(v.number()),
@@ -150,9 +150,7 @@ export const updateBiller = mutation({
     logoStorageId: v.optional(v.id("_storage")),
     description: v.optional(v.string()),
     isActive: v.optional(v.boolean()),
-    supportedCurrencies: v.optional(
-      v.array(v.union(v.literal("XOF"), v.literal("GNF")))
-    ),
+    supportedCurrencies: v.optional(v.array(v.string())),
     countries: v.optional(v.array(v.string())),
     feePercentage: v.optional(v.number()),
     feeFixed: v.optional(v.number()),

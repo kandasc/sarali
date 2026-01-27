@@ -2,7 +2,7 @@ import { useState, useRef, type FormEvent } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -13,13 +13,44 @@ import { Label } from "@/components/ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Building2, Edit, Trash2, Upload, Image as ImageIcon } from "lucide-react";
+import { Building2, Edit, Trash2, Image as ImageIcon, X, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+
+// Predefined countries and currencies
+const PREDEFINED_COUNTRIES = [
+  { code: "GN", name: "Guinée", flag: "🇬🇳" },
+  { code: "CI", name: "Côte d'Ivoire", flag: "🇨🇮" },
+  { code: "SN", name: "Sénégal", flag: "🇸🇳" },
+  { code: "ML", name: "Mali", flag: "🇲🇱" },
+  { code: "BF", name: "Burkina Faso", flag: "🇧🇫" },
+  { code: "NE", name: "Niger", flag: "🇳🇪" },
+  { code: "TG", name: "Togo", flag: "🇹🇬" },
+  { code: "BJ", name: "Bénin", flag: "🇧🇯" },
+  { code: "GH", name: "Ghana", flag: "🇬🇭" },
+  { code: "NG", name: "Nigeria", flag: "🇳🇬" },
+  { code: "CM", name: "Cameroun", flag: "🇨🇲" },
+  { code: "GA", name: "Gabon", flag: "🇬🇦" },
+  { code: "CG", name: "Congo", flag: "🇨🇬" },
+  { code: "CD", name: "RD Congo", flag: "🇨🇩" },
+  { code: "MA", name: "Maroc", flag: "🇲🇦" },
+];
+
+const PREDEFINED_CURRENCIES = [
+  { code: "XOF", name: "Franc CFA (BCEAO)" },
+  { code: "GNF", name: "Franc Guinéen" },
+  { code: "XAF", name: "Franc CFA (BEAC)" },
+  { code: "EUR", name: "Euro" },
+  { code: "USD", name: "Dollar US" },
+  { code: "GHS", name: "Cedi Ghanéen" },
+  { code: "NGN", name: "Naira Nigérian" },
+  { code: "MAD", name: "Dirham Marocain" },
+  { code: "CDF", name: "Franc Congolais" },
+];
 
 const billerSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
@@ -27,13 +58,235 @@ const billerSchema = z.object({
   category: z.enum(["ELECTRICITY", "WATER", "INTERNET", "PHONE", "TV", "OTHER"]),
   description: z.string().optional(),
   isActive: z.boolean(),
-  supportedCurrencies: z.array(z.enum(["XOF", "GNF"])).min(1, "Sélectionnez au moins une devise"),
+  supportedCurrencies: z.array(z.string()).min(1, "Sélectionnez au moins une devise"),
   countries: z.array(z.string()).min(1, "Sélectionnez au moins un pays"),
   feePercentage: z.number().min(0).max(100).optional(),
   feeFixed: z.number().min(0).optional(),
 });
 
 type BillerFormData = z.infer<typeof billerSchema>;
+
+// Multi-select component for countries
+function CountryMultiSelect({ 
+  value, 
+  onChange,
+  customCountries,
+  onAddCustom
+}: { 
+  value: string[]; 
+  onChange: (value: string[]) => void;
+  customCountries: { code: string; name: string }[];
+  onAddCustom: (country: { code: string; name: string }) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [newCode, setNewCode] = useState("");
+  const [newName, setNewName] = useState("");
+
+  const allCountries = [...PREDEFINED_COUNTRIES, ...customCountries.map(c => ({ ...c, flag: "🌍" }))];
+
+  const toggleCountry = (code: string) => {
+    if (value.includes(code)) {
+      onChange(value.filter(c => c !== code));
+    } else {
+      onChange([...value, code]);
+    }
+  };
+
+  const handleAddCustom = () => {
+    if (newCode && newName) {
+      onAddCustom({ code: newCode.toUpperCase(), name: newName });
+      onChange([...value, newCode.toUpperCase()]);
+      setNewCode("");
+      setNewName("");
+    }
+  };
+
+  const getCountryDisplay = (code: string) => {
+    const country = allCountries.find(c => c.code === code);
+    if (country) {
+      return `${"flag" in country ? country.flag : "🌍"} ${country.name}`;
+    }
+    return code;
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-full justify-start h-auto min-h-10">
+          {value.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {value.map(code => (
+                <Badge key={code} variant="secondary" className="mr-1">
+                  {getCountryDisplay(code)}
+                  <button
+                    type="button"
+                    className="ml-1 hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCountry(code);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <span className="text-muted-foreground">Sélectionner les pays...</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="start">
+        <div className="max-h-60 overflow-y-auto p-2">
+          {allCountries.map(country => (
+            <div
+              key={country.code}
+              className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-accent ${
+                value.includes(country.code) ? "bg-accent" : ""
+              }`}
+              onClick={() => toggleCountry(country.code)}
+            >
+              <span>{"flag" in country ? country.flag : "🌍"}</span>
+              <span className="flex-1">{country.name}</span>
+              <span className="text-xs text-muted-foreground">{country.code}</span>
+              {value.includes(country.code) && <Badge variant="default" className="text-xs">✓</Badge>}
+            </div>
+          ))}
+        </div>
+        <div className="border-t p-3 space-y-2">
+          <p className="text-sm font-medium">Ajouter un pays</p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Code (ex: FR)"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value)}
+              className="w-20"
+              maxLength={3}
+            />
+            <Input
+              placeholder="Nom du pays"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="flex-1"
+            />
+            <Button type="button" size="icon" onClick={handleAddCustom} disabled={!newCode || !newName}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// Multi-select component for currencies
+function CurrencyMultiSelect({ 
+  value, 
+  onChange,
+  customCurrencies,
+  onAddCustom
+}: { 
+  value: string[]; 
+  onChange: (value: string[]) => void;
+  customCurrencies: { code: string; name: string }[];
+  onAddCustom: (currency: { code: string; name: string }) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [newCode, setNewCode] = useState("");
+  const [newName, setNewName] = useState("");
+
+  const allCurrencies = [...PREDEFINED_CURRENCIES, ...customCurrencies];
+
+  const toggleCurrency = (code: string) => {
+    if (value.includes(code)) {
+      onChange(value.filter(c => c !== code));
+    } else {
+      onChange([...value, code]);
+    }
+  };
+
+  const handleAddCustom = () => {
+    if (newCode && newName) {
+      onAddCustom({ code: newCode.toUpperCase(), name: newName });
+      onChange([...value, newCode.toUpperCase()]);
+      setNewCode("");
+      setNewName("");
+    }
+  };
+
+  const getCurrencyDisplay = (code: string) => {
+    const currency = allCurrencies.find(c => c.code === code);
+    return currency ? `${code} - ${currency.name}` : code;
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-full justify-start h-auto min-h-10">
+          {value.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {value.map(code => (
+                <Badge key={code} variant="secondary" className="mr-1">
+                  {code}
+                  <button
+                    type="button"
+                    className="ml-1 hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCurrency(code);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <span className="text-muted-foreground">Sélectionner les devises...</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="start">
+        <div className="max-h-60 overflow-y-auto p-2">
+          {allCurrencies.map(currency => (
+            <div
+              key={currency.code}
+              className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-accent ${
+                value.includes(currency.code) ? "bg-accent" : ""
+              }`}
+              onClick={() => toggleCurrency(currency.code)}
+            >
+              <span className="font-mono font-medium">{currency.code}</span>
+              <span className="flex-1 text-sm text-muted-foreground">{currency.name}</span>
+              {value.includes(currency.code) && <Badge variant="default" className="text-xs">✓</Badge>}
+            </div>
+          ))}
+        </div>
+        <div className="border-t p-3 space-y-2">
+          <p className="text-sm font-medium">Ajouter une devise</p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Code (ex: EUR)"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value)}
+              className="w-20"
+              maxLength={3}
+            />
+            <Input
+              placeholder="Nom de la devise"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="flex-1"
+            />
+            <Button type="button" size="icon" onClick={handleAddCustom} disabled={!newCode || !newName}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function EditBillerDialog({ biller, onClose }: { 
   biller: {
@@ -43,7 +296,7 @@ function EditBillerDialog({ biller, onClose }: {
     category: "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "OTHER";
     description?: string;
     isActive: boolean;
-    supportedCurrencies: ("XOF" | "GNF")[];
+    supportedCurrencies: string[];
     countries: string[];
     feePercentage?: number;
     feeFixed?: number;
@@ -56,6 +309,8 @@ function EditBillerDialog({ biller, onClose }: {
   const [logoPreview, setLogoPreview] = useState<string | null>(biller.logoUrl || null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [customCountries, setCustomCountries] = useState<{ code: string; name: string }[]>([]);
+  const [customCurrencies, setCustomCurrencies] = useState<{ code: string; name: string }[]>([]);
 
   const generateLogoUploadUrl = useMutation(api.billers.generateLogoUploadUrl);
   const updateBiller = useMutation(api.billers.updateBiller);
@@ -241,55 +496,17 @@ function EditBillerDialog({ biller, onClose }: {
           <FormField
             control={form.control}
             name="supportedCurrencies"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Devises supportées</FormLabel>
-                <div className="flex gap-4">
-                  <FormField
-                    control={form.control}
-                    name="supportedCurrencies"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes("XOF")}
-                            onCheckedChange={(checked) => {
-                              const value = field.value || [];
-                              if (checked) {
-                                field.onChange([...value, "XOF"]);
-                              } else {
-                                field.onChange(value.filter((v) => v !== "XOF"));
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">XOF (Franc CFA)</FormLabel>
-                      </FormItem>
-                    )}
+                <FormControl>
+                  <CurrencyMultiSelect
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    customCurrencies={customCurrencies}
+                    onAddCustom={(c) => setCustomCurrencies([...customCurrencies, c])}
                   />
-                  <FormField
-                    control={form.control}
-                    name="supportedCurrencies"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes("GNF")}
-                            onCheckedChange={(checked) => {
-                              const value = field.value || [];
-                              if (checked) {
-                                field.onChange([...value, "GNF"]);
-                              } else {
-                                field.onChange(value.filter((v) => v !== "GNF"));
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">GNF (Franc Guinéen)</FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -298,55 +515,17 @@ function EditBillerDialog({ biller, onClose }: {
           <FormField
             control={form.control}
             name="countries"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Pays</FormLabel>
-                <div className="flex gap-4">
-                  <FormField
-                    control={form.control}
-                    name="countries"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes("GN")}
-                            onCheckedChange={(checked) => {
-                              const value = field.value || [];
-                              if (checked) {
-                                field.onChange([...value, "GN"]);
-                              } else {
-                                field.onChange(value.filter((v) => v !== "GN"));
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">Guinée</FormLabel>
-                      </FormItem>
-                    )}
+                <FormControl>
+                  <CountryMultiSelect
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    customCountries={customCountries}
+                    onAddCustom={(c) => setCustomCountries([...customCountries, c])}
                   />
-                  <FormField
-                    control={form.control}
-                    name="countries"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes("CI")}
-                            onCheckedChange={(checked) => {
-                              const value = field.value || [];
-                              if (checked) {
-                                field.onChange([...value, "CI"]);
-                              } else {
-                                field.onChange(value.filter((v) => v !== "CI"));
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">Côte d'Ivoire</FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -431,6 +610,8 @@ function CreateBillerDialog() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [customCountries, setCustomCountries] = useState<{ code: string; name: string }[]>([]);
+  const [customCurrencies, setCustomCurrencies] = useState<{ code: string; name: string }[]>([]);
 
   const generateLogoUploadUrl = useMutation(api.billers.generateLogoUploadUrl);
   const createBiller = useMutation(api.billers.createBiller);
@@ -627,55 +808,17 @@ function CreateBillerDialog() {
             <FormField
               control={form.control}
               name="supportedCurrencies"
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Devises supportées</FormLabel>
-                  <div className="flex gap-4">
-                    <FormField
-                      control={form.control}
-                      name="supportedCurrencies"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes("XOF")}
-                              onCheckedChange={(checked) => {
-                                const value = field.value || [];
-                                if (checked) {
-                                  field.onChange([...value, "XOF"]);
-                                } else {
-                                  field.onChange(value.filter((v) => v !== "XOF"));
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">XOF (Franc CFA)</FormLabel>
-                        </FormItem>
-                      )}
+                  <FormControl>
+                    <CurrencyMultiSelect
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      customCurrencies={customCurrencies}
+                      onAddCustom={(c) => setCustomCurrencies([...customCurrencies, c])}
                     />
-                    <FormField
-                      control={form.control}
-                      name="supportedCurrencies"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes("GNF")}
-                              onCheckedChange={(checked) => {
-                                const value = field.value || [];
-                                if (checked) {
-                                  field.onChange([...value, "GNF"]);
-                                } else {
-                                  field.onChange(value.filter((v) => v !== "GNF"));
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">GNF (Franc Guinéen)</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -684,55 +827,17 @@ function CreateBillerDialog() {
             <FormField
               control={form.control}
               name="countries"
-              render={() => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Pays</FormLabel>
-                  <div className="flex gap-4">
-                    <FormField
-                      control={form.control}
-                      name="countries"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes("GN")}
-                              onCheckedChange={(checked) => {
-                                const value = field.value || [];
-                                if (checked) {
-                                  field.onChange([...value, "GN"]);
-                                } else {
-                                  field.onChange(value.filter((v) => v !== "GN"));
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">Guinée</FormLabel>
-                        </FormItem>
-                      )}
+                  <FormControl>
+                    <CountryMultiSelect
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      customCountries={customCountries}
+                      onAddCustom={(c) => setCustomCountries([...customCountries, c])}
                     />
-                    <FormField
-                      control={form.control}
-                      name="countries"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes("CI")}
-                              onCheckedChange={(checked) => {
-                                const value = field.value || [];
-                                if (checked) {
-                                  field.onChange([...value, "CI"]);
-                                } else {
-                                  field.onChange(value.filter((v) => v !== "CI"));
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">Côte d'Ivoire</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
