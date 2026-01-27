@@ -35,6 +35,396 @@ const billerSchema = z.object({
 
 type BillerFormData = z.infer<typeof billerSchema>;
 
+function EditBillerDialog({ biller, onClose }: { 
+  biller: {
+    _id: Id<"billers">;
+    name: string;
+    code: string;
+    category: "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "OTHER";
+    description?: string;
+    isActive: boolean;
+    supportedCurrencies: ("XOF" | "GNF")[];
+    countries: string[];
+    feePercentage?: number;
+    feeFixed?: number;
+    logoUrl?: string | null;
+    logoStorageId?: Id<"_storage">;
+  };
+  onClose: () => void;
+}) {
+  const [logoStorageId, setLogoStorageId] = useState<Id<"_storage"> | undefined>(biller.logoStorageId);
+  const [logoPreview, setLogoPreview] = useState<string | null>(biller.logoUrl || null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const generateLogoUploadUrl = useMutation(api.billers.generateLogoUploadUrl);
+  const updateBiller = useMutation(api.billers.updateBiller);
+
+  const form = useForm<BillerFormData>({
+    resolver: zodResolver(billerSchema),
+    defaultValues: {
+      name: biller.name,
+      code: biller.code,
+      category: biller.category,
+      description: biller.description || "",
+      isActive: biller.isActive,
+      supportedCurrencies: biller.supportedCurrencies,
+      countries: biller.countries,
+      feePercentage: biller.feePercentage || 0,
+      feeFixed: biller.feeFixed || 0,
+    },
+  });
+
+  const handleLogoUpload = async (event: FormEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner une image");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const uploadUrl = await generateLogoUploadUrl();
+      const result = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const { storageId } = await result.json();
+      setLogoStorageId(storageId);
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      toast.success("Logo téléchargé avec succès");
+    } catch (error) {
+      toast.error("Erreur lors du téléchargement du logo");
+      console.error(error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const onSubmit = async (data: BillerFormData) => {
+    try {
+      await updateBiller({
+        billerId: biller._id,
+        ...data,
+        logoStorageId,
+      });
+
+      toast.success("Fournisseur modifié avec succès");
+      onClose();
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Erreur lors de la modification du fournisseur");
+      }
+    }
+  };
+
+  return (
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle>Modifier le fournisseur</DialogTitle>
+        <DialogDescription>
+          Modifiez les informations du fournisseur
+        </DialogDescription>
+      </DialogHeader>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Logo</Label>
+            <div className="flex items-center gap-4">
+              {logoPreview ? (
+                <div className="relative h-24 w-24 rounded-lg border overflow-hidden">
+                  <img src={logoPreview} alt="Logo preview" className="h-full w-full object-contain" />
+                </div>
+              ) : (
+                <div className="h-24 w-24 rounded-lg border flex items-center justify-center bg-muted">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+              <div className="flex-1">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleLogoUpload}
+                  disabled={isUploading}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Format recommandé: PNG ou SVG avec fond transparent
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom du fournisseur</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: CIE" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Code unique</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: CIE_CI" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Catégorie</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="ELECTRICITY">Électricité</SelectItem>
+                    <SelectItem value="WATER">Eau</SelectItem>
+                    <SelectItem value="INTERNET">Internet</SelectItem>
+                    <SelectItem value="PHONE">Téléphone</SelectItem>
+                    <SelectItem value="TV">Télévision</SelectItem>
+                    <SelectItem value="OTHER">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Description du fournisseur" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="supportedCurrencies"
+            render={() => (
+              <FormItem>
+                <FormLabel>Devises supportées</FormLabel>
+                <div className="flex gap-4">
+                  <FormField
+                    control={form.control}
+                    name="supportedCurrencies"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes("XOF")}
+                            onCheckedChange={(checked) => {
+                              const value = field.value || [];
+                              if (checked) {
+                                field.onChange([...value, "XOF"]);
+                              } else {
+                                field.onChange(value.filter((v) => v !== "XOF"));
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">XOF (Franc CFA)</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="supportedCurrencies"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes("GNF")}
+                            onCheckedChange={(checked) => {
+                              const value = field.value || [];
+                              if (checked) {
+                                field.onChange([...value, "GNF"]);
+                              } else {
+                                field.onChange(value.filter((v) => v !== "GNF"));
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">GNF (Franc Guinéen)</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="countries"
+            render={() => (
+              <FormItem>
+                <FormLabel>Pays</FormLabel>
+                <div className="flex gap-4">
+                  <FormField
+                    control={form.control}
+                    name="countries"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes("GN")}
+                            onCheckedChange={(checked) => {
+                              const value = field.value || [];
+                              if (checked) {
+                                field.onChange([...value, "GN"]);
+                              } else {
+                                field.onChange(value.filter((v) => v !== "GN"));
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">Guinée</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="countries"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes("CI")}
+                            onCheckedChange={(checked) => {
+                              const value = field.value || [];
+                              if (checked) {
+                                field.onChange([...value, "CI"]);
+                              } else {
+                                field.onChange(value.filter((v) => v !== "CI"));
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">Côte d'Ivoire</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="feePercentage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Frais (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="feeFixed"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Frais fixes</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Actif</FormLabel>
+                  <FormDescription>
+                    Le fournisseur sera visible sur l'interface publique
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isUploading}>
+              Enregistrer les modifications
+            </Button>
+          </DialogFooter>
+        </form>
+      </Form>
+    </DialogContent>
+  );
+}
+
 function CreateBillerDialog() {
   const [open, setOpen] = useState(false);
   const [logoStorageId, setLogoStorageId] = useState<Id<"_storage"> | undefined>();
@@ -425,6 +815,7 @@ function CreateBillerDialog() {
 export default function BillersTab() {
   const billers = useQuery(api.billers.listAllBillers);
   const deleteBiller = useMutation(api.billers.deleteBiller);
+  const [editingBiller, setEditingBiller] = useState<typeof billers extends (infer T)[] | undefined ? T | null : null>(null);
 
   const handleDelete = async (billerId: Id<"billers">) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce fournisseur ?")) {
@@ -560,10 +951,17 @@ export default function BillersTab() {
                   )}
 
                   <div className="flex items-center gap-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Modifier
-                    </Button>
+                    <Dialog open={editingBiller?._id === biller._id} onOpenChange={(open) => !open && setEditingBiller(null)}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditingBiller(biller)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Modifier
+                        </Button>
+                      </DialogTrigger>
+                      {editingBiller?._id === biller._id && (
+                        <EditBillerDialog biller={editingBiller} onClose={() => setEditingBiller(null)} />
+                      )}
+                    </Dialog>
                     <Button
                       size="sm"
                       variant="outline"
