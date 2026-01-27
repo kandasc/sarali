@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, Globe } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, ChevronDown, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -70,12 +70,55 @@ const countryConfig: Record<Country, { name: string; flag: string; currency: "XO
   CI: { name: "Côte d'Ivoire", flag: "🇨🇮", currency: "XOF" },
 };
 
+// Featured content by country
+const featuredByCountry: Record<Country, {
+  company: string;
+  description: string;
+  color: string;
+  website: string;
+  products: Array<{ name: string; icon: React.ReactNode; desc: string }>;
+}> = {
+  CI: {
+    company: "Leadway Assurance",
+    description: "Assurance de confiance en Côte d'Ivoire",
+    color: "emerald",
+    website: "https://ci.leadway.com",
+    products: [
+      { name: "Auto / Moto", icon: <Car className="h-5 w-5" />, desc: "Assurance automobile" },
+      { name: "Santé", icon: <Heart className="h-5 w-5" />, desc: "Couverture santé" },
+      { name: "Voyage", icon: <Plane className="h-5 w-5" />, desc: "Assurance voyage" },
+      { name: "Habitation", icon: <Home className="h-5 w-5" />, desc: "Protection maison" },
+      { name: "Éducation", icon: <GraduationCap className="h-5 w-5" />, desc: "Épargne éducation" },
+      { name: "Vie", icon: <Users className="h-5 w-5" />, desc: "Assurance vie" },
+      { name: "Retraite", icon: <Shield className="h-5 w-5" />, desc: "Prévoyance" },
+      { name: "Queen", icon: <Heart className="h-5 w-5" />, desc: "Pour les femmes" },
+    ],
+  },
+  GN: {
+    company: "SOGUIPAH",
+    description: "Services publics en Guinée",
+    color: "amber",
+    website: "https://www.soguipah.org",
+    products: [
+      { name: "Électricité EDG", icon: <Zap className="h-5 w-5" />, desc: "Factures électricité" },
+      { name: "Eau SEG", icon: <Droplet className="h-5 w-5" />, desc: "Factures eau" },
+      { name: "Orange Money", icon: <Phone className="h-5 w-5" />, desc: "Mobile money" },
+      { name: "MTN Money", icon: <Phone className="h-5 w-5" />, desc: "Mobile money" },
+      { name: "Télécoms", icon: <Wifi className="h-5 w-5" />, desc: "Internet & Téléphone" },
+      { name: "Impôts", icon: <Building2 className="h-5 w-5" />, desc: "Taxes & Impôts" },
+      { name: "Assurance", icon: <Shield className="h-5 w-5" />, desc: "Assurances locales" },
+      { name: "Éducation", icon: <GraduationCap className="h-5 w-5" />, desc: "Frais scolaires" },
+    ],
+  },
+};
+
 export default function PublicPaymentPage() {
   const { t } = useTranslation(["payment", "common"]);
   const navigate = useNavigate();
   const { agencyCode } = useParams<{ agencyCode?: string }>();
   const location = useLocation();
   const [selectedCountry, setSelectedCountry] = useState<Country>("GN");
+  const [isDetectingCountry, setIsDetectingCountry] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<BillCategory | null>(null);
   const [selectedBiller, setSelectedBiller] = useState<{
     id: Id<"billers">;
@@ -97,6 +140,30 @@ export default function PublicPaymentPage() {
   } | null>(null);
   
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
+
+  // Detect user's country from IP on mount
+  useEffect(() => {
+    const detectCountry = async () => {
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+        const countryCode = data.country_code;
+        
+        // Check if detected country is in our supported list
+        if (countryCode === "GN" || countryCode === "CI") {
+          setSelectedCountry(countryCode as Country);
+        }
+        // Default to GN if not in supported countries
+      } catch (error) {
+        console.error("Could not detect country:", error);
+        // Keep default (GN)
+      } finally {
+        setIsDetectingCountry(false);
+      }
+    };
+    
+    detectCountry();
+  }, []);
 
   // Get current user for dashboard link - safe for unauthenticated users
   const currentUser = useQuery(api.users.getCurrentUserOrNull);
@@ -227,7 +294,10 @@ export default function PublicPaymentPage() {
       
       setIsSearching(true);
       try {
-        const results = await searchBillersWithAI({ query: debouncedSearchQuery });
+        const results = await searchBillersWithAI({ 
+          query: debouncedSearchQuery,
+          country: selectedCountry,
+        });
         setSearchResults(results);
       } catch (error) {
         console.error("Search error:", error);
@@ -238,7 +308,7 @@ export default function PublicPaymentPage() {
     };
     
     performSearch();
-  }, [debouncedSearchQuery, searchBillersWithAI]);
+  }, [debouncedSearchQuery, searchBillersWithAI, selectedCountry]);
   
   // Handle search result selection
   const handleSelectSearchResult = (billerId: string) => {
@@ -355,24 +425,43 @@ export default function PublicPaymentPage() {
             )}
           </div>
           
-          {/* Country Selector */}
+          {/* Country Selector - Dropdown */}
           {!selectedBiller && (
             <div className="flex justify-center">
-              <div className="inline-flex items-center gap-2 p-1 bg-muted rounded-lg">
-                {(Object.entries(countryConfig) as [Country, typeof countryConfig[Country]][]).map(([code, config]) => (
-                  <button
-                    key={code}
-                    onClick={() => setSelectedCountry(code)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all ${
-                      selectedCountry === code
-                        ? "bg-background shadow-sm text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <span className="text-lg">{config.flag}</span>
-                    <span className="font-medium">{t(`country.${code}`)}</span>
-                  </button>
-                ))}
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={selectedCountry}
+                  onValueChange={(value) => setSelectedCountry(value as Country)}
+                  disabled={isDetectingCountry}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    {isDetectingCountry ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Détection...
+                      </span>
+                    ) : (
+                      <SelectValue>
+                        <span className="flex items-center gap-2">
+                          <span className="text-lg">{countryConfig[selectedCountry].flag}</span>
+                          <span>{t(`country.${selectedCountry}`)}</span>
+                        </span>
+                      </SelectValue>
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.entries(countryConfig) as [Country, typeof countryConfig[Country]][]).map(([code, config]) => (
+                      <SelectItem key={code} value={code}>
+                        <span className="flex items-center gap-2">
+                          <span className="text-lg">{config.flag}</span>
+                          <span>{t(`country.${code}`)}</span>
+                          <span className="text-xs text-muted-foreground">({config.currency})</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
@@ -519,7 +608,7 @@ export default function PublicPaymentPage() {
             </Card>
           )}
           
-          {/* Featured Section - Leadway Assurance */}
+          {/* Featured Section - Dynamic by country */}
           {!selectedBiller && !selectedCategory && (
             <div className="space-y-4">
               <div className="text-center">
@@ -527,76 +616,108 @@ export default function PublicPaymentPage() {
                   {t("featured.title")}
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  {t("featured.subtitle")}
+                  {t("featured.subtitle")} - {countryConfig[selectedCountry].flag} {countryConfig[selectedCountry].name}
                 </p>
               </div>
               
-              <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-green-50/30 dark:from-emerald-950/20 dark:to-green-950/10 dark:border-emerald-800">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col md:flex-row gap-6">
-                    {/* Leadway Branding */}
-                    <div className="flex-shrink-0 text-center md:text-left">
-                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-emerald-600 mb-3">
-                        <Shield className="h-10 w-10 text-white" />
-                      </div>
-                      <h3 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">
-                        Leadway Assurance
-                      </h3>
-                      <p className="text-sm text-emerald-600 dark:text-emerald-500 mb-3">
-                        {t("featured.insurance")}
-                      </p>
-                      <a
-                        href="https://ci.leadway.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
-                      >
-                        ci.leadway.com →
-                      </a>
-                    </div>
-                    
-                    {/* Insurance Products Grid */}
-                    <div className="flex-1">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {[
-                          { name: "Auto / Moto", icon: <Car className="h-5 w-5" />, desc: "Assurance automobile" },
-                          { name: "Santé", icon: <Heart className="h-5 w-5" />, desc: "Couverture santé" },
-                          { name: "Voyage", icon: <Plane className="h-5 w-5" />, desc: "Assurance voyage" },
-                          { name: "Habitation", icon: <Home className="h-5 w-5" />, desc: "Protection maison" },
-                          { name: "Éducation", icon: <GraduationCap className="h-5 w-5" />, desc: "Épargne éducation" },
-                          { name: "Vie", icon: <Users className="h-5 w-5" />, desc: "Assurance vie" },
-                          { name: "Retraite", icon: <Shield className="h-5 w-5" />, desc: "Prévoyance" },
-                          { name: "Queen", icon: <Heart className="h-5 w-5" />, desc: "Pour les femmes" },
-                        ].map((product, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              toast.info(`${t("featured.payPremium")} - ${product.name}`, {
-                                description: "Contactez Leadway pour plus d'informations",
-                              });
-                              window.open("https://ci.leadway.com", "_blank");
-                            }}
-                            className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md transition-all group"
+              {(() => {
+                const featured = featuredByCountry[selectedCountry];
+                const colorClass = selectedCountry === "CI" ? "emerald" : "amber";
+                
+                return (
+                  <Card className={`border-2 border-${colorClass}-200 bg-gradient-to-br from-${colorClass}-50/50 to-${colorClass === "emerald" ? "green" : "orange"}-50/30 dark:from-${colorClass}-950/20 dark:to-${colorClass === "emerald" ? "green" : "orange"}-950/10 dark:border-${colorClass}-800`}
+                    style={{
+                      borderColor: selectedCountry === "CI" ? "rgb(167 243 208)" : "rgb(253 230 138)",
+                      background: selectedCountry === "CI" 
+                        ? "linear-gradient(to bottom right, rgba(236, 253, 245, 0.5), rgba(240, 253, 244, 0.3))"
+                        : "linear-gradient(to bottom right, rgba(255, 251, 235, 0.5), rgba(255, 247, 237, 0.3))",
+                    }}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col md:flex-row gap-6">
+                        {/* Company Branding */}
+                        <div className="flex-shrink-0 text-center md:text-left">
+                          <div 
+                            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-3"
+                            style={{ backgroundColor: selectedCountry === "CI" ? "rgb(5 150 105)" : "rgb(217 119 6)" }}
                           >
-                            <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                              {product.icon}
-                            </div>
-                            <div className="text-center">
-                              <p className="font-medium text-sm text-foreground">{product.name}</p>
-                              <p className="text-xs text-muted-foreground">{product.desc}</p>
-                            </div>
-                          </button>
-                        ))}
+                            <Shield className="h-10 w-10 text-white" />
+                          </div>
+                          <h3 
+                            className="text-2xl font-bold mb-1"
+                            style={{ color: selectedCountry === "CI" ? "rgb(4 120 87)" : "rgb(180 83 9)" }}
+                          >
+                            {featured.company}
+                          </h3>
+                          <p 
+                            className="text-sm mb-3"
+                            style={{ color: selectedCountry === "CI" ? "rgb(5 150 105)" : "rgb(217 119 6)" }}
+                          >
+                            {featured.description}
+                          </p>
+                          <a
+                            href={featured.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs hover:underline"
+                            style={{ color: selectedCountry === "CI" ? "rgb(5 150 105)" : "rgb(217 119 6)" }}
+                          >
+                            {featured.website.replace("https://", "")} →
+                          </a>
+                        </div>
+                        
+                        {/* Products Grid */}
+                        <div className="flex-1">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {featured.products.map((product, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  toast.info(`${product.name}`, {
+                                    description: product.desc,
+                                  });
+                                  window.open(featured.website, "_blank");
+                                }}
+                                className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white dark:bg-slate-900 border hover:shadow-md transition-all group"
+                                style={{
+                                  borderColor: selectedCountry === "CI" ? "rgb(167 243 208)" : "rgb(253 230 138)",
+                                }}
+                              >
+                                <div 
+                                  className="p-2 rounded-full transition-colors"
+                                  style={{
+                                    backgroundColor: selectedCountry === "CI" ? "rgb(209 250 229)" : "rgb(254 243 199)",
+                                    color: selectedCountry === "CI" ? "rgb(5 150 105)" : "rgb(217 119 6)",
+                                  }}
+                                >
+                                  {product.icon}
+                                </div>
+                                <div className="text-center">
+                                  <p className="font-medium text-sm text-foreground">{product.name}</p>
+                                  <p className="text-xs text-muted-foreground">{product.desc}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                          
+                          <div 
+                            className="mt-4 flex items-center justify-center gap-2 text-xs"
+                            style={{ color: selectedCountry === "CI" ? "rgb(5 150 105)" : "rgb(217 119 6)" }}
+                          >
+                            <Shield className="h-4 w-4" />
+                            <span>
+                              {selectedCountry === "CI" 
+                                ? "Protection complète • Devis instantané • Service Leely WhatsApp"
+                                : "Services disponibles • Paiement sécurisé • Support local"
+                              }
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      
-                      <div className="mt-4 flex items-center justify-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
-                        <Shield className="h-4 w-4" />
-                        <span>Protection complète • Devis instantané • Service Leely WhatsApp</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
             </div>
           )}
 
