@@ -85,19 +85,16 @@ export const createPaymentIntent = action({
         body: JSON.stringify({
           amount: args.amount,
           currency: args.currency,
-          customer: {
-            name: args.customerName,
-            phone: args.customerPhone,
-            email: args.customerEmail,
-          },
+          payment_method_types: ["card", "mobile_money"],
           description: args.description,
-          reference: args.reference,
+          customer_name: args.customerName,
+          customer_email: args.customerEmail || undefined,
+          customer_phone: args.customerPhone,
+          return_url: args.returnUrl,
+          cancel_url: args.cancelUrl,
           metadata: {
+            reference: args.reference,
             internal_payment_id: args.paymentId,
-          },
-          redirect_urls: {
-            success: args.returnUrl,
-            cancel: args.cancelUrl,
           },
         }),
       });
