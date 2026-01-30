@@ -25,14 +25,17 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useNavigate, useParams } from "react-router-dom";
+import type { Id } from "@/convex/_generated/dataModel.d.ts";
 
 export function RoleSimulationControls() {
   const [open, setOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [simulatedRole, setSimulatedRole] = useState<string>("");
+  const [selectedBillerId, setSelectedBillerId] = useState<string>("");
   const [reason, setReason] = useState("");
   const startSimulation = useMutation(api.roleSimulation.startSimulation);
   const history = useQuery(api.roleSimulation.getSimulationHistory, {});
+  const billers = useQuery(api.superAdmin.listBillersForSelect, {});
   const navigate = useNavigate();
   const { lng } = useParams<{ lng: string }>();
 
@@ -43,17 +46,26 @@ export function RoleSimulationControls() {
       return;
     }
 
+    // For BILLER role, require a biller selection
+    if (simulatedRole === "BILLER" && !selectedBillerId) {
+      toast.error("Veuillez sélectionner un fournisseur");
+      return;
+    }
+
     try {
       await startSimulation({
         simulatedRole: simulatedRole as
           | "MANAGER"
           | "CHEF_AGENCE"
-          | "CAISSIER",
+          | "CAISSIER"
+          | "BILLER",
+        targetBillerId: simulatedRole === "BILLER" ? selectedBillerId as Id<"billers"> : undefined,
         reason,
       });
       toast.success("Simulation démarrée avec succès");
       setOpen(false);
       setSimulatedRole("");
+      setSelectedBillerId("");
       setReason("");
       
       // Navigate to the appropriate dashboard based on simulated role
@@ -64,6 +76,8 @@ export function RoleSimulationControls() {
         navigate(`${langPrefix}/agency`);
       } else if (simulatedRole === "CAISSIER") {
         navigate(`${langPrefix}/cashier`);
+      } else if (simulatedRole === "BILLER") {
+        navigate(`${langPrefix}/biller`);
       }
     } catch (error) {
       toast.error(
@@ -105,7 +119,12 @@ export function RoleSimulationControls() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label>Rôle à Simuler</Label>
-                    <Select value={simulatedRole} onValueChange={setSimulatedRole}>
+                    <Select value={simulatedRole} onValueChange={(val) => {
+                      setSimulatedRole(val);
+                      if (val !== "BILLER") {
+                        setSelectedBillerId("");
+                      }
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un rôle" />
                       </SelectTrigger>
@@ -115,9 +134,29 @@ export function RoleSimulationControls() {
                           Chef d'Agence
                         </SelectItem>
                         <SelectItem value="CAISSIER">Caissier</SelectItem>
+                        <SelectItem value="BILLER">Fournisseur</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {simulatedRole === "BILLER" && (
+                    <div className="space-y-2">
+                      <Label>Fournisseur à Simuler</Label>
+                      <Select value={selectedBillerId} onValueChange={setSelectedBillerId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un fournisseur" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {billers?.map((biller) => (
+                            <SelectItem key={biller.id} value={biller.id}>
+                              {biller.name} ({biller.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label>Raison de la Simulation</Label>
                     <Textarea
@@ -171,7 +210,7 @@ export function RoleSimulationControls() {
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold">
-                                  {session.simulatedRole}
+                                  {session.simulatedRole === "BILLER" ? "Fournisseur" : session.simulatedRole}
                                 </span>
                                 {session.targetUser && (
                                   <span className="text-sm text-muted-foreground">

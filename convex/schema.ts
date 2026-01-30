@@ -149,9 +149,11 @@ export default defineSchema({
     simulatedRole: v.union(
       v.literal("MANAGER"),
       v.literal("CHEF_AGENCE"),
-      v.literal("CAISSIER")
+      v.literal("CAISSIER"),
+      v.literal("BILLER")
     ),
     targetUserId: v.optional(v.id("users")),
+    targetBillerId: v.optional(v.id("billers")), // For BILLER simulation
     reason: v.string(),
     startedAt: v.number(),
     endedAt: v.optional(v.number()),

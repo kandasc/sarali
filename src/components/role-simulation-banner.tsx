@@ -3,15 +3,31 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import { Eye, X } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 export function RoleSimulationBanner() {
   const session = useQuery(api.roleSimulation.getActiveSimulation);
   const endSimulation = useMutation(api.roleSimulation.endSimulation);
+  const navigate = useNavigate();
+  const { lng } = useParams<{ lng: string }>();
 
   if (!session) return null;
 
   const handleEnd = async () => {
     await endSimulation({ sessionId: session.sessionId });
+    // Navigate back to admin dashboard
+    const langPrefix = lng ? `/${lng}` : "/fr";
+    navigate(`${langPrefix}/superadmin`);
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "BILLER": return "Fournisseur";
+      case "MANAGER": return "Manager";
+      case "CHEF_AGENCE": return "Chef d'Agence";
+      case "CAISSIER": return "Caissier";
+      default: return role;
+    }
   };
 
   return (
@@ -22,11 +38,16 @@ export function RoleSimulationBanner() {
             <Eye className="h-4 w-4 text-orange-600" />
             <span className="font-medium text-orange-900 dark:text-orange-100">
               Mode Simulation Active:{" "}
-              <span className="font-bold">{session.simulatedRole}</span>
+              <span className="font-bold">{getRoleLabel(session.simulatedRole)}</span>
             </span>
             {session.targetUser && (
               <span className="text-sm text-orange-700 dark:text-orange-300">
                 • Utilisateur: {session.targetUser.name}
+              </span>
+            )}
+            {session.targetBiller && (
+              <span className="text-sm text-orange-700 dark:text-orange-300">
+                • Fournisseur: {session.targetBiller.name}
               </span>
             )}
           </div>

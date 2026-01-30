@@ -20,15 +20,43 @@ export const getDashboardStats = query({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
-    if (!user || user.role !== "BILLER" || !user.billerId) {
+    if (!user) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "Accès non autorisé",
       });
     }
 
+    let billerId: Id<"billers"> | undefined;
+    let isSimulation = false;
+
+    // Check if BILLER role
+    if (user.role === "BILLER" && user.billerId) {
+      billerId = user.billerId;
+    }
+    // Check for simulation if MASTER or SUPER_ADMIN
+    else if (user.role === "MASTER" || user.role === "SUPER_ADMIN") {
+      const sessions = await ctx.db
+        .query("roleSimulations")
+        .withIndex("by_master", (q) => q.eq("masterUserId", user._id))
+        .filter((q) => q.eq(q.field("endedAt"), undefined))
+        .collect();
+
+      if (sessions.length > 0 && sessions[0].simulatedRole === "BILLER" && sessions[0].targetBillerId) {
+        billerId = sessions[0].targetBillerId;
+        isSimulation = true;
+      }
+    }
+
+    if (!billerId) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Accès non autorisé - pas de fournisseur associé",
+      });
+    }
+
     // Get the biller info
-    const biller = await ctx.db.get(user.billerId);
+    const biller = await ctx.db.get(billerId);
     if (!biller) {
       throw new ConvexError({
         code: "NOT_FOUND",
@@ -41,7 +69,7 @@ export const getDashboardStats = query({
       .query("billPayments")
       .collect();
     
-    const billerPayments = payments.filter(p => p.billerId === user.billerId);
+    const billerPayments = payments.filter(p => p.billerId === billerId);
 
     // Calculate stats
     const now = Date.now();
@@ -85,6 +113,7 @@ export const getDashboardStats = query({
         monthTransactions: monthPayments.length,
         monthAmount,
       },
+      isSimulation,
     };
   },
 });
@@ -116,7 +145,33 @@ export const getTransactions = query({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
-    if (!user || user.role !== "BILLER" || !user.billerId) {
+    if (!user) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Accès non autorisé",
+      });
+    }
+
+    let billerId: Id<"billers"> | undefined;
+
+    // Check if BILLER role
+    if (user.role === "BILLER" && user.billerId) {
+      billerId = user.billerId;
+    }
+    // Check for simulation if MASTER or SUPER_ADMIN
+    else if (user.role === "MASTER" || user.role === "SUPER_ADMIN") {
+      const sessions = await ctx.db
+        .query("roleSimulations")
+        .withIndex("by_master", (q) => q.eq("masterUserId", user._id))
+        .filter((q) => q.eq(q.field("endedAt"), undefined))
+        .collect();
+
+      if (sessions.length > 0 && sessions[0].simulatedRole === "BILLER" && sessions[0].targetBillerId) {
+        billerId = sessions[0].targetBillerId;
+      }
+    }
+
+    if (!billerId) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "Accès non autorisé",
@@ -130,7 +185,7 @@ export const getTransactions = query({
       .take(args.limit || 100);
     
     // Filter by biller
-    payments = payments.filter(p => p.billerId === user.billerId);
+    payments = payments.filter(p => p.billerId === billerId);
 
     // Filter by status if provided
     if (args.status) {
@@ -165,7 +220,33 @@ export const getDailyReport = query({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
-    if (!user || user.role !== "BILLER" || !user.billerId) {
+    if (!user) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Accès non autorisé",
+      });
+    }
+
+    let billerId: Id<"billers"> | undefined;
+
+    // Check if BILLER role
+    if (user.role === "BILLER" && user.billerId) {
+      billerId = user.billerId;
+    }
+    // Check for simulation if MASTER or SUPER_ADMIN
+    else if (user.role === "MASTER" || user.role === "SUPER_ADMIN") {
+      const sessions = await ctx.db
+        .query("roleSimulations")
+        .withIndex("by_master", (q) => q.eq("masterUserId", user._id))
+        .filter((q) => q.eq(q.field("endedAt"), undefined))
+        .collect();
+
+      if (sessions.length > 0 && sessions[0].simulatedRole === "BILLER" && sessions[0].targetBillerId) {
+        billerId = sessions[0].targetBillerId;
+      }
+    }
+
+    if (!billerId) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "Accès non autorisé",
@@ -181,7 +262,7 @@ export const getDailyReport = query({
       .collect();
     
     const payments = allPayments.filter(
-      p => p.billerId === user.billerId && 
+      p => p.billerId === billerId && 
            p._creationTime >= startDate &&
            p.status === "COMPLETED" &&
            !p.isTest
@@ -211,10 +292,7 @@ export const getBillerInfo = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHENTICATED",
-        message: "Non authentifié",
-      });
+      return null;
     }
 
     const user = await ctx.db
@@ -222,11 +300,34 @@ export const getBillerInfo = query({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
-    if (!user || user.role !== "BILLER" || !user.billerId) {
+    if (!user) {
       return null;
     }
 
-    const biller = await ctx.db.get(user.billerId);
+    let billerId: Id<"billers"> | undefined;
+
+    // Check if BILLER role
+    if (user.role === "BILLER" && user.billerId) {
+      billerId = user.billerId;
+    }
+    // Check for simulation if MASTER or SUPER_ADMIN
+    else if (user.role === "MASTER" || user.role === "SUPER_ADMIN") {
+      const sessions = await ctx.db
+        .query("roleSimulations")
+        .withIndex("by_master", (q) => q.eq("masterUserId", user._id))
+        .filter((q) => q.eq(q.field("endedAt"), undefined))
+        .collect();
+
+      if (sessions.length > 0 && sessions[0].simulatedRole === "BILLER" && sessions[0].targetBillerId) {
+        billerId = sessions[0].targetBillerId;
+      }
+    }
+
+    if (!billerId) {
+      return null;
+    }
+
+    const biller = await ctx.db.get(billerId);
     if (!biller) {
       return null;
     }

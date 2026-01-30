@@ -9,9 +9,11 @@ export const startSimulation = mutation({
     simulatedRole: v.union(
       v.literal("MANAGER"),
       v.literal("CHEF_AGENCE"),
-      v.literal("CAISSIER")
+      v.literal("CAISSIER"),
+      v.literal("BILLER")
     ),
     targetUserId: v.optional(v.id("users")),
+    targetBillerId: v.optional(v.id("billers")), // For BILLER simulation
     reason: v.string(),
   },
   handler: async (ctx, args) => {
@@ -68,11 +70,23 @@ export const startSimulation = mutation({
       }
     }
 
+    // For BILLER simulation, verify biller exists
+    if (args.simulatedRole === "BILLER" && args.targetBillerId) {
+      const biller = await ctx.db.get(args.targetBillerId);
+      if (!biller) {
+        throw new ConvexError({
+          code: "NOT_FOUND",
+          message: "Biller not found",
+        });
+      }
+    }
+
     // Create new simulation session
     const sessionId = await ctx.db.insert("roleSimulations", {
       masterUserId: master._id,
       simulatedRole: args.simulatedRole,
       targetUserId: args.targetUserId,
+      targetBillerId: args.simulatedRole === "BILLER" ? args.targetBillerId : undefined,
       reason: args.reason,
       startedAt: Date.now(),
     });
@@ -83,10 +97,10 @@ export const startSimulation = mutation({
       action: "START_ROLE_SIMULATION",
       entityType: "roleSimulations",
       entityId: sessionId,
-      details: `Started simulating ${args.simulatedRole}${args.targetUserId ? ` (User: ${args.targetUserId})` : ""}`,
+      details: `Started simulating ${args.simulatedRole}${args.targetUserId ? ` (User: ${args.targetUserId})` : ""}${args.targetBillerId ? ` (Biller: ${args.targetBillerId})` : ""}`,
     });
 
-    return { sessionId, simulatedRole: args.simulatedRole };
+    return { sessionId, simulatedRole: args.simulatedRole, targetBillerId: args.targetBillerId };
   },
 });
 
@@ -189,9 +203,14 @@ export const getActiveSimulation = query({
 
     const session = sessions[0];
     let targetUser: Doc<"users"> | null = null;
+    let targetBiller: Doc<"billers"> | null = null;
 
     if (session.targetUserId) {
       targetUser = await ctx.db.get(session.targetUserId);
+    }
+
+    if (session.targetBillerId) {
+      targetBiller = await ctx.db.get(session.targetBillerId);
     }
 
     return {
@@ -205,6 +224,14 @@ export const getActiveSimulation = query({
             agencyId: targetUser.agencyId,
           }
         : null,
+      targetBiller: targetBiller
+        ? {
+            id: targetBiller._id,
+            name: targetBiller.name,
+            code: targetBiller.code,
+          }
+        : null,
+      targetBillerId: session.targetBillerId,
       startedAt: session.startedAt,
       reason: session.reason,
     };
