@@ -118,24 +118,43 @@ export const createPaymentIntent = action({
         };
       }
 
-      if (!response.ok || !result.success || !result.data) {
+      // Log the full response for debugging
+      console.log("SayeleGate response:", JSON.stringify(result));
+
+      // Handle different response formats
+      // Some APIs return data directly, others wrap in { success, data }
+      const paymentData = result.data || (result as unknown as PaymentIntentResponse["data"]);
+      
+      if (!response.ok) {
         return {
           success: false,
-          error: result.error?.message || `Erreur lors de la création du paiement (status: ${response.status})`,
+          error: result.error?.message || `Erreur HTTP (status: ${response.status})`,
+        };
+      }
+
+      // Check if we have the required fields (payment_id and checkout_url)
+      const paymentId = paymentData?.payment_id || (result as Record<string, unknown>).payment_id || (result as Record<string, unknown>).id;
+      const checkoutUrl = paymentData?.checkout_url || (result as Record<string, unknown>).checkout_url || (result as Record<string, unknown>).url;
+
+      if (!paymentId || !checkoutUrl) {
+        console.error("Missing payment_id or checkout_url in response:", JSON.stringify(result));
+        return {
+          success: false,
+          error: "Réponse incomplète du serveur de paiement",
         };
       }
 
       // Update the payment record with gateway info
       await ctx.runMutation(internal.sayeleGateMutations.updatePaymentGatewayInfo, {
         paymentReference: args.reference,
-        gatewayPaymentId: result.data.payment_id,
-        checkoutUrl: result.data.checkout_url,
+        gatewayPaymentId: String(paymentId),
+        checkoutUrl: String(checkoutUrl),
       });
 
       return {
         success: true,
-        checkoutUrl: result.data.checkout_url,
-        gatewayPaymentId: result.data.payment_id,
+        checkoutUrl: String(checkoutUrl),
+        gatewayPaymentId: String(paymentId),
       };
     } catch (error) {
       console.error("SayeleGate API error:", error);
