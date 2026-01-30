@@ -224,12 +224,15 @@ export default defineSchema({
     ),
     errorMessage: v.optional(v.string()),
     metadata: v.optional(v.string()),
+    // Test vs Live mode
+    isTest: v.optional(v.boolean()),
   })
     .index("by_reference", ["paymentReference"])
     .index("by_phone", ["customerPhone"])
     .index("by_status", ["status"])
     .index("by_sarali_id", ["saraliTransactionId"])
-    .index("by_gateway_payment", ["gatewayPaymentId"]),
+    .index("by_gateway_payment", ["gatewayPaymentId"])
+    .index("by_is_test", ["isTest"]),
 
   bulkPayments: defineTable({
     batchReference: v.string(),

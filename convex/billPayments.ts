@@ -34,6 +34,7 @@ export const initiateBillPayment = mutation({
     customerEmail: v.optional(v.string()),
     amount: v.number(),
     currency: v.union(v.literal("XOF"), v.literal("GNF")),
+    isTest: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     // Validate amount
@@ -83,6 +84,7 @@ export const initiateBillPayment = mutation({
       paymentReference,
       paymentGateway,
       status: "PENDING",
+      isTest: args.isTest ?? false,
     });
 
     return {

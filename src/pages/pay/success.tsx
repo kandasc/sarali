@@ -103,6 +103,13 @@ export default function PaymentSuccessPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      {/* Test Mode Banner */}
+      {payment.isTest && (
+        <div className="bg-yellow-500 text-yellow-950 text-center py-2 text-sm font-medium print:hidden">
+          🧪 MODE TEST - Cette transaction n'est pas réelle
+        </div>
+      )}
+      
       {/* Header */}
       <nav className="border-b bg-background/80 backdrop-blur-sm print:hidden">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">

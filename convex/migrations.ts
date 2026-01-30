@@ -56,3 +56,54 @@ export const fixBillPaymentAmounts = mutation({
     };
   },
 });
+
+// Migration: Mark all existing transactions as test
+export const markExistingTransactionsAsTest = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const payments = await ctx.db
+      .query("billPayments")
+      .collect();
+    
+    let updatedCount = 0;
+    
+    for (const payment of payments) {
+      if (payment.isTest === undefined) {
+        await ctx.db.patch(payment._id, {
+          isTest: true,
+        });
+        updatedCount++;
+      }
+    }
+    
+    return { 
+      success: true, 
+      message: `Marked ${updatedCount} transactions as test`,
+      updatedCount 
+    };
+  },
+});
+
+// Migration: Delete all test transactions
+export const deleteTestTransactions = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const payments = await ctx.db
+      .query("billPayments")
+      .withIndex("by_is_test", (q) => q.eq("isTest", true))
+      .collect();
+    
+    let deletedCount = 0;
+    
+    for (const payment of payments) {
+      await ctx.db.delete(payment._id);
+      deletedCount++;
+    }
+    
+    return { 
+      success: true, 
+      message: `Deleted ${deletedCount} test transactions`,
+      deletedCount 
+    };
+  },
+});
