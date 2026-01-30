@@ -94,12 +94,34 @@ export const createPaymentIntent = action({
         }),
       });
 
-      const result = (await response.json()) as PaymentIntentResponse;
+      // Get raw text first to handle empty responses
+      const responseText = await response.text();
+      
+      // Check if response is empty
+      if (!responseText || responseText.trim() === "") {
+        console.error("SayeleGate returned empty response, status:", response.status);
+        return {
+          success: false,
+          error: `Réponse vide du serveur de paiement (status: ${response.status})`,
+        };
+      }
+
+      // Try to parse JSON
+      let result: PaymentIntentResponse;
+      try {
+        result = JSON.parse(responseText) as PaymentIntentResponse;
+      } catch (parseError) {
+        console.error("Failed to parse SayeleGate response:", responseText.substring(0, 500));
+        return {
+          success: false,
+          error: "Réponse invalide du serveur de paiement",
+        };
+      }
 
       if (!response.ok || !result.success || !result.data) {
         return {
           success: false,
-          error: result.error?.message || "Erreur lors de la création du paiement",
+          error: result.error?.message || `Erreur lors de la création du paiement (status: ${response.status})`,
         };
       }
 
@@ -158,12 +180,32 @@ export const checkPaymentStatus = action({
         }
       );
 
-      const result = (await response.json()) as PaymentStatusResponse;
+      // Get raw text first to handle empty responses
+      const responseText = await response.text();
+      
+      if (!responseText || responseText.trim() === "") {
+        console.error("SayeleGate status check returned empty response, status:", response.status);
+        return {
+          success: false,
+          error: `Réponse vide du serveur (status: ${response.status})`,
+        };
+      }
+
+      let result: PaymentStatusResponse;
+      try {
+        result = JSON.parse(responseText) as PaymentStatusResponse;
+      } catch (parseError) {
+        console.error("Failed to parse SayeleGate status response:", responseText.substring(0, 500));
+        return {
+          success: false,
+          error: "Réponse invalide du serveur de paiement",
+        };
+      }
 
       if (!response.ok || !result.success || !result.data) {
         return {
           success: false,
-          error: result.error?.message || "Erreur lors de la vérification du paiement",
+          error: result.error?.message || `Erreur lors de la vérification du paiement (status: ${response.status})`,
         };
       }
 
