@@ -10,14 +10,15 @@ import ReportsTab from "./_components/reports-tab.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 
 function BillerDashboardContent() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const billerInfo = useQuery(api.billerDashboard.getBillerInfo);
   const activeSimulation = useQuery(api.roleSimulation.getActiveSimulation);
-  const navigate = useNavigate();
   const { lng } = useParams<{ lng: string }>();
+
+  const langPrefix = lng ? `/${lng}` : "/fr";
 
   if (currentUser === undefined || billerInfo === undefined || activeSimulation === undefined) {
     return (
@@ -55,21 +56,20 @@ function BillerDashboardContent() {
   const isSimulatingBiller = activeSimulation?.simulatedRole === "BILLER";
   const isBillerRole = currentUser.role === "BILLER";
   
+  // Redirect to appropriate dashboard if not a biller
   if (!isBillerRole && !isSimulatingBiller) {
-    const langPrefix = lng ? `/${lng}` : "/fr";
-    // Redirect to appropriate dashboard based on role
     if (currentUser.role === "SUPER_ADMIN") {
-      navigate(`${langPrefix}/superadmin`, { replace: true });
+      return <Navigate to={`${langPrefix}/superadmin`} replace />;
     } else if (currentUser.role === "MASTER") {
-      navigate(`${langPrefix}/master`, { replace: true });
+      return <Navigate to={`${langPrefix}/master`} replace />;
     } else if (currentUser.role === "MANAGER") {
-      navigate(`${langPrefix}/manager`, { replace: true });
+      return <Navigate to={`${langPrefix}/manager`} replace />;
     } else if (currentUser.role === "CHEF_AGENCE") {
-      navigate(`${langPrefix}/agency`, { replace: true });
+      return <Navigate to={`${langPrefix}/agency`} replace />;
     } else if (currentUser.role === "CAISSIER") {
-      navigate(`${langPrefix}/cashier`, { replace: true });
+      return <Navigate to={`${langPrefix}/cashier`} replace />;
     }
-    return null;
+    return <Navigate to={`${langPrefix}/dashboard`} replace />;
   }
 
   if (!billerInfo) {

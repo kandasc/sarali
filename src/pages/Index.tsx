@@ -99,6 +99,15 @@ function DashboardRouter() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const activeSimulation = useQuery(api.roleSimulation.getActiveSimulation);
 
+  // Wait for both queries to load
+  if (currentUser === undefined || activeSimulation === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Skeleton className="h-20 w-full max-w-md" />
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
