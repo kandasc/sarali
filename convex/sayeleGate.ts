@@ -4,7 +4,7 @@ import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
-const SAYELE_GATE_API_URL = "https://gate.sayele.co/api/v1";
+const SAYELE_GATE_API_URL = "https://gate-api.sayele.co/api/v1";
 
 type PaymentIntentResponse = {
   success: boolean;
