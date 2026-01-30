@@ -3,9 +3,10 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import DashboardLayout from "@/components/dashboard-layout.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-import { Shield, Users, Sparkles, AlertCircle, Building2, Wallet, Activity, LayoutDashboard, BarChart3 } from "lucide-react";
+import { Shield, Users, Sparkles, AlertCircle, Building2, Wallet, Activity, LayoutDashboard, BarChart3, Settings2 } from "lucide-react";
 import OverviewTab from "./_components/overview-tab.tsx";
 import UsersTab from "./_components/users-tab.tsx";
+import SystemTab from "./_components/system-tab.tsx";
 import BillersTab from "../master/_components/billers-tab.tsx";
 import DashboardTab from "../master/_components/dashboard-tab.tsx";
 import AgenciesTab from "../master/_components/agencies-tab.tsx";
@@ -87,7 +88,7 @@ function SuperAdminContent() {
         <RoleSimulationControls />
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
+          <TabsList className="grid w-full grid-cols-5 md:grid-cols-9">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -95,6 +96,10 @@ function SuperAdminContent() {
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4" />
               <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="system" className="flex items-center gap-2">
+              <Settings2 className="h-4 w-4" />
+              <span className="hidden sm:inline">System</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -128,6 +133,10 @@ function SuperAdminContent() {
 
           <TabsContent value="dashboard" className="space-y-4">
             <DashboardTab />
+          </TabsContent>
+
+          <TabsContent value="system" className="space-y-4">
+            <SystemTab />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-4">

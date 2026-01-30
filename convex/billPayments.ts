@@ -239,3 +239,56 @@ export const getBillProviders = query({
     return providers[args.billType] || [];
   },
 });
+
+// Get payment statistics (test vs live)
+export const getPaymentStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const allPayments = await ctx.db.query("billPayments").collect();
+    
+    const testPayments = allPayments.filter(p => p.isTest === true);
+    const livePayments = allPayments.filter(p => p.isTest === false);
+    const unmarkedPayments = allPayments.filter(p => p.isTest === undefined);
+    
+    const testTotalAmount = testPayments.reduce((sum, p) => sum + p.totalAmount, 0);
+    const liveTotalAmount = livePayments.reduce((sum, p) => sum + p.totalAmount, 0);
+    
+    const testCompleted = testPayments.filter(p => p.status === "COMPLETED").length;
+    const liveCompleted = livePayments.filter(p => p.status === "COMPLETED").length;
+    
+    return {
+      total: allPayments.length,
+      test: {
+        count: testPayments.length,
+        completed: testCompleted,
+        totalAmount: testTotalAmount,
+      },
+      live: {
+        count: livePayments.length,
+        completed: liveCompleted,
+        totalAmount: liveTotalAmount,
+      },
+      unmarked: unmarkedPayments.length,
+    };
+  },
+});
+
+// List all payments with filtering
+export const listPayments = query({
+  args: {
+    isTest: v.optional(v.boolean()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    let paymentsQuery = ctx.db.query("billPayments").order("desc");
+    
+    const payments = await paymentsQuery.take(args.limit || 50);
+    
+    // Filter by isTest if specified
+    if (args.isTest !== undefined) {
+      return payments.filter(p => p.isTest === args.isTest);
+    }
+    
+    return payments;
+  },
+});
