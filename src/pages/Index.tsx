@@ -117,6 +117,8 @@ function DashboardRouter() {
       return <Navigate to={`${langPrefix}/agency`} replace />;
     } else if (activeSimulation.simulatedRole === "CAISSIER") {
       return <Navigate to={`${langPrefix}/cashier`} replace />;
+    } else if (activeSimulation.simulatedRole === "BILLER") {
+      return <Navigate to={`${langPrefix}/biller`} replace />;
     }
   }
 
@@ -131,6 +133,8 @@ function DashboardRouter() {
     return <Navigate to={`${langPrefix}/agency`} replace />;
   } else if (currentUser.role === "CAISSIER") {
     return <Navigate to={`${langPrefix}/cashier`} replace />;
+  } else if (currentUser.role === "BILLER") {
+    return <Navigate to={`${langPrefix}/biller`} replace />;
   }
 
   return <Navigate to={`${langPrefix}/setup`} replace />;
