@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Download, TrendingUp, Calendar, TestTube } from "lucide-react";
+import { Download, TrendingUp, Calendar, TestTube, FileText } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -34,6 +34,8 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function ReportsTab() {
   const [period, setPeriod] = useState<"7" | "14" | "30" | "90">("30");
@@ -45,6 +47,7 @@ export default function ReportsTab() {
     includeAllStatuses: true,
   });
   const dashboardStats = useQuery(api.billerDashboard.getDashboardStats);
+  const billerInfo = useQuery(api.billerDashboard.getBillerInfo);
 
   const handleExportCSV = () => {
     if (!dailyReport) return;
@@ -74,6 +77,107 @@ export default function ReportsTab() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleExportPDF = () => {
+    if (!dailyReport || !billerInfo) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const currentDate = format(new Date(), "dd MMMM yyyy", { locale: fr });
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Rapport de Transactions", pageWidth / 2, 20, { align: "center" });
+
+    // Biller info
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Fournisseur: ${billerInfo.name}`, 20, 35);
+    doc.text(`Code: ${billerInfo.code}`, 20, 42);
+    doc.text(`Date du rapport: ${currentDate}`, 20, 49);
+    doc.text(`Période: ${period} derniers jours`, 20, 56);
+    
+    // Line separator
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 62, pageWidth - 20, 62);
+
+    // Calculate totals for the period
+    const periodTotals = dailyReport.reduce(
+      (acc, day) => ({
+        transactions: acc.transactions + day.count,
+        amount: acc.amount + day.amount,
+        fees: acc.fees + day.fees,
+      }),
+      { transactions: 0, amount: 0, fees: 0 }
+    );
+
+    // Summary section
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Résumé", 20, 75);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total Transactions: ${periodTotals.transactions}`, 20, 85);
+    doc.text(`Volume Total: ${periodTotals.amount.toLocaleString()} XOF`, 20, 92);
+    doc.text(`Frais Collectés: ${periodTotals.fees.toLocaleString()} XOF`, 20, 99);
+
+    // Table
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Détail par jour", 20, 115);
+
+    autoTable(doc, {
+      startY: 120,
+      head: [["Date", "Transactions", "Montant (XOF)", "Frais (XOF)"]],
+      body: dailyReport.map((day) => [
+        format(new Date(day.date), "dd MMM yyyy", { locale: fr }),
+        day.count.toString(),
+        day.amount.toLocaleString(),
+        day.fees.toLocaleString(),
+      ]),
+      foot: [[
+        "TOTAL",
+        periodTotals.transactions.toString(),
+        periodTotals.amount.toLocaleString(),
+        periodTotals.fees.toLocaleString(),
+      ]],
+      theme: "striped",
+      headStyles: { 
+        fillColor: [59, 130, 246], 
+        textColor: 255,
+        fontStyle: "bold",
+        halign: "center"
+      },
+      footStyles: { 
+        fillColor: [243, 244, 246], 
+        textColor: [0, 0, 0],
+        fontStyle: "bold" 
+      },
+      columnStyles: {
+        0: { halign: "left" },
+        1: { halign: "center" },
+        2: { halign: "right" },
+        3: { halign: "right" },
+      },
+      styles: {
+        fontSize: 10,
+      },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+    });
+
+    // Footer with signature
+    const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 20;
+    
+    doc.setFontSize(9);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Généré le ${currentDate} par SAYELE (sayele.co)`, pageWidth / 2, finalY, { align: "center" });
+    doc.text("Ce document est généré automatiquement et ne nécessite pas de signature.", pageWidth / 2, finalY + 6, { align: "center" });
+
+    // Save PDF
+    doc.save(`rapport-${billerInfo.code}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
   if (dailyReport === undefined || dashboardStats === undefined) {
@@ -109,7 +213,7 @@ export default function ReportsTab() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Période:</span>
@@ -137,10 +241,16 @@ export default function ReportsTab() {
                 </Label>
               </div>
             </div>
-            <Button variant="outline" onClick={handleExportCSV}>
-              <Download className="h-4 w-4 mr-2" />
-              Exporter CSV
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleExportCSV}>
+                <Download className="h-4 w-4 mr-2" />
+                CSV
+              </Button>
+              <Button onClick={handleExportPDF} disabled={!billerInfo}>
+                <FileText className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

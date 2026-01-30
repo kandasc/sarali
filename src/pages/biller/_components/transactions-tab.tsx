@@ -378,7 +378,7 @@ export default function TransactionsTab() {
                   )}
                   {selectedTransaction.saraliTransactionId && (
                     <div className="flex items-center justify-between p-2 bg-muted rounded">
-                      <span className="text-muted-foreground">ID Sarali:</span>
+                      <span className="text-muted-foreground">ID SAYELE:</span>
                       <code className="font-mono text-xs bg-background px-2 py-1 rounded">
                         {selectedTransaction.saraliTransactionId}
                       </code>

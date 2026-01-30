@@ -68,8 +68,8 @@ export default function PaymentSuccessPage() {
         <nav className="border-b bg-background/80 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
-              <span className="text-2xl font-bold">Sarali</span>
+              <img src="/sarali-logo.png" alt="SAYELE" className="h-8 w-8 object-contain" />
+              <span className="text-2xl font-bold">SAYELE</span>
             </div>
             <LanguageSwitcher />
           </div>
@@ -114,8 +114,8 @@ export default function PaymentSuccessPage() {
       <nav className="border-b bg-background/80 backdrop-blur-sm print:hidden">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
-            <span className="text-2xl font-bold">Sarali</span>
+            <img src="/sarali-logo.png" alt="SAYELE" className="h-8 w-8 object-contain" />
+            <span className="text-2xl font-bold">SAYELE</span>
             <span className="ml-2 text-muted-foreground">• Confirmation de Paiement</span>
           </div>
           <LanguageSwitcher />

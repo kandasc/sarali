@@ -180,7 +180,7 @@ export default function PublicPaymentPage() {
   );
 
   // Default branding
-  const brandName = agencyBranding?.brandName || "Sarali";
+  const brandName = agencyBranding?.brandName || "SAYELE";
   const brandLogoUrl = agencyBranding?.brandLogoUrl;
   const brandPrimaryColor = agencyBranding?.brandPrimaryColor;
   const brandWebsite = agencyBranding?.brandWebsite;
@@ -380,7 +380,7 @@ export default function PublicPaymentPage() {
                 className="h-8 w-8 object-contain"
               />
             ) : (
-              <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
+              <img src="/sarali-logo.png" alt="SAYELE" className="h-8 w-8 object-contain" />
             )}
             <span className="text-2xl font-bold" style={brandPrimaryColor ? { color: brandPrimaryColor } : {}}>
               {brandName}
