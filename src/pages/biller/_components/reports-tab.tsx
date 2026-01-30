@@ -173,7 +173,7 @@ export default function ReportsTab() {
     
     doc.setFontSize(9);
     doc.setTextColor(128, 128, 128);
-    doc.text(`Généré le ${currentDate} par SAYELE (sayele.co)`, pageWidth / 2, finalY, { align: "center" });
+    doc.text(`Généré le ${currentDate} par Sarali, by SAYELE (sayele.co)`, pageWidth / 2, finalY, { align: "center" });
     doc.text("Ce document est généré automatiquement et ne nécessite pas de signature.", pageWidth / 2, finalY + 6, { align: "center" });
 
     // Save PDF

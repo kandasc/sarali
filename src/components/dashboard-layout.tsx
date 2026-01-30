@@ -26,7 +26,7 @@ export default function DashboardLayout({
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <img src="/sarali-logo.png" alt="SAYELE" className="h-8 w-8 object-contain" />
+              <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
               <span className="text-xl font-bold">{t("app.name")}</span>
             </div>
             <div className="h-6 w-px bg-border" />
