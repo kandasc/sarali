@@ -6,13 +6,21 @@ import { internal } from "./_generated/api";
 
 const SAYELE_GATE_API_URL = "https://gate-api.sayele.co/api/v1";
 
+// SayeleGate checkout URL base
+const SAYELE_GATE_CHECKOUT_URL = "https://gate.sayele.co/checkout";
+
 type PaymentIntentResponse = {
-  success: boolean;
+  // Response can be either wrapped or direct
+  success?: boolean;
   data?: {
-    payment_id: string;
-    checkout_url: string;
-    expires_at: string;
+    id: string;
+    client_secret: string;
+    status: string;
   };
+  // Or direct fields
+  id?: string;
+  client_secret?: string;
+  status?: string;
   error?: {
     code: string;
     message: string;
@@ -121,10 +129,7 @@ export const createPaymentIntent = action({
       // Log the full response for debugging
       console.log("SayeleGate response:", JSON.stringify(result));
 
-      // Handle different response formats
-      // Some APIs return data directly, others wrap in { success, data }
-      const paymentData = result.data || (result as unknown as PaymentIntentResponse["data"]);
-      
+      // Handle HTTP errors
       if (!response.ok) {
         return {
           success: false,
@@ -132,28 +137,33 @@ export const createPaymentIntent = action({
         };
       }
 
-      // Check if we have the required fields (payment_id and checkout_url)
-      const paymentId = paymentData?.payment_id || (result as Record<string, unknown>).payment_id || (result as Record<string, unknown>).id;
-      const checkoutUrl = paymentData?.checkout_url || (result as Record<string, unknown>).checkout_url || (result as Record<string, unknown>).url;
+      // Handle different response formats
+      // API can return { id, client_secret, ... } directly or wrapped in { data: { id, client_secret, ... } }
+      const paymentId = result.data?.id || result.id;
+      const clientSecret = result.data?.client_secret || result.client_secret;
 
-      if (!paymentId || !checkoutUrl) {
-        console.error("Missing payment_id or checkout_url in response:", JSON.stringify(result));
+      if (!paymentId || !clientSecret) {
+        console.error("Missing id or client_secret in response:", JSON.stringify(result));
         return {
           success: false,
-          error: "Réponse incomplète du serveur de paiement",
+          error: "Réponse incomplète du serveur de paiement (id ou client_secret manquant)",
         };
       }
+
+      // Construct checkout URL using client_secret
+      const checkoutUrl = `${SAYELE_GATE_CHECKOUT_URL}?client_secret=${encodeURIComponent(clientSecret)}`;
+      console.log("Constructed checkout URL:", checkoutUrl);
 
       // Update the payment record with gateway info
       await ctx.runMutation(internal.sayeleGateMutations.updatePaymentGatewayInfo, {
         paymentReference: args.reference,
         gatewayPaymentId: String(paymentId),
-        checkoutUrl: String(checkoutUrl),
+        checkoutUrl: checkoutUrl,
       });
 
       return {
         success: true,
-        checkoutUrl: String(checkoutUrl),
+        checkoutUrl: checkoutUrl,
         gatewayPaymentId: String(paymentId),
       };
     } catch (error) {
