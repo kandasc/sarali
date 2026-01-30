@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import { Plus, UserCog, Shield } from "lucide-react";
+import { Plus, UserCog, Shield, Store } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import {
   Dialog,
@@ -52,6 +52,16 @@ const createMasterSchema = z.object({
 });
 
 type CreateMasterFormData = z.infer<typeof createMasterSchema>;
+
+const createBillerSchema = z.object({
+  name: z.string().min(1, "Nom requis"),
+  email: z.string().email("Email invalide"),
+  phone: z.string().optional(),
+  billerId: z.string().min(1, "Fournisseur requis"),
+  currency: z.enum(["XOF", "GNF"]),
+});
+
+type CreateBillerFormData = z.infer<typeof createBillerSchema>;
 
 function CreateMasterDialog() {
   const [open, setOpen] = useState(false);
@@ -168,8 +178,155 @@ function CreateMasterDialog() {
   );
 }
 
+function CreateBillerDialog() {
+  const [open, setOpen] = useState(false);
+  const createBillerUser = useMutation(api.superAdmin.createBillerUser);
+  const billers = useQuery(api.superAdmin.listBillersForSelect);
+  
+  const form = useForm<CreateBillerFormData>({
+    resolver: zodResolver(createBillerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      billerId: "",
+      currency: "XOF",
+    },
+  });
+
+  const onSubmit = async (data: CreateBillerFormData) => {
+    try {
+      await createBillerUser({
+        name: data.name,
+        email: data.email,
+        phone: data.phone || undefined,
+        billerId: data.billerId as Id<"billers">,
+        currency: data.currency,
+      });
+      toast.success("Utilisateur fournisseur créé avec succès");
+      setOpen(false);
+      form.reset();
+    } catch (error) {
+      toast.error("Erreur lors de la création de l'utilisateur");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Store className="h-4 w-4 mr-2" />
+          Créer Fournisseur
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Créer un utilisateur Fournisseur</DialogTitle>
+          <DialogDescription>
+            Créer un compte d'accès pour un fournisseur partenaire
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="billerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fournisseur</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un fournisseur" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {billers?.map((biller) => (
+                        <SelectItem key={biller.id} value={biller.id}>
+                          {biller.name} ({biller.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom du contact</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Jean Dupont" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="contact@fournisseur.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Téléphone (Optionnel)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+225 07 00 00 00 00" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="currency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Devise</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="XOF">XOF (Franc CFA)</SelectItem>
+                      <SelectItem value="GNF">GNF (Franc Guinéen)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Annuler
+              </Button>
+              <Button type="submit">Créer</Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function UsersTab() {
-  const [roleFilter, setRoleFilter] = useState<"SUPER_ADMIN" | "MASTER" | "MANAGER" | "CHEF_AGENCE" | "CAISSIER" | undefined>(undefined);
+  const [roleFilter, setRoleFilter] = useState<"SUPER_ADMIN" | "MASTER" | "MANAGER" | "CHEF_AGENCE" | "CAISSIER" | "BILLER" | undefined>(undefined);
   const users = useQuery(api.superAdmin.listAllUsers, { role: roleFilter });
   const deleteUser = useMutation(api.superAdmin.deleteUser);
 
@@ -195,6 +352,7 @@ export default function UsersTab() {
       case "MANAGER": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100";
       case "CHEF_AGENCE": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
       case "CAISSIER": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
+      case "BILLER": return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100";
       default: return "";
     }
   };
@@ -213,7 +371,10 @@ export default function UsersTab() {
                 Manage all users across the system
               </CardDescription>
             </div>
-            <CreateMasterDialog />
+            <div className="flex gap-2">
+              <CreateBillerDialog />
+              <CreateMasterDialog />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -229,6 +390,7 @@ export default function UsersTab() {
                 <SelectItem value="MANAGER">Manager</SelectItem>
                 <SelectItem value="CHEF_AGENCE">Agency Head</SelectItem>
                 <SelectItem value="CAISSIER">Cashier</SelectItem>
+                <SelectItem value="BILLER">Biller</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -240,6 +402,7 @@ export default function UsersTab() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Biller</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Credit</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -248,7 +411,7 @@ export default function UsersTab() {
               <TableBody>
                 {users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No users found
                     </TableCell>
                   </TableRow>
@@ -261,6 +424,16 @@ export default function UsersTab() {
                         <Badge className={getRoleBadgeColor(user.role)}>
                           {user.role.replace("_", " ")}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {user.role === "BILLER" && "billerName" in user ? (
+                          <Badge variant="outline">
+                            <Store className="h-3 w-3 mr-1" />
+                            {user.billerName}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={user.status === "ACTIVE" ? "default" : "secondary"}>

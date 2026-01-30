@@ -8,7 +8,7 @@ async function checkBillerManagementPermission(
   ctx: {
     db: {
       get: (id: Id<"users">) => Promise<{
-        role: "SUPER_ADMIN" | "MASTER" | "MANAGER" | "CHEF_AGENCE" | "CAISSIER";
+        role: "SUPER_ADMIN" | "MASTER" | "MANAGER" | "CHEF_AGENCE" | "CAISSIER" | "BILLER";
       } | null>;
     };
   },

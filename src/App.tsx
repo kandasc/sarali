@@ -18,6 +18,7 @@ import MasterDashboard from "./pages/master/page.tsx";
 import ManagerDashboard from "./pages/manager/page.tsx";
 import AgencyDashboard from "./pages/agency/page.tsx";
 import CashierDashboard from "./pages/cashier/page.tsx";
+import BillerDashboard from "./pages/biller/page.tsx";
 import PublicPaymentPage from "./pages/pay/page.tsx";
 import PaymentSuccessPage from "./pages/pay/success.tsx";
 import { useServiceWorker } from "./hooks/use-service-worker.ts";
@@ -60,6 +61,7 @@ export default function App() {
               <Route path="manager" element={<ManagerDashboard />} />
               <Route path="agency" element={<AgencyDashboard />} />
               <Route path="cashier" element={<CashierDashboard />} />
+              <Route path="biller" element={<BillerDashboard />} />
               <Route path="success" element={<PaymentSuccessPage />} />
               <Route path=":agencyCode" element={<PublicPaymentPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -11,10 +11,12 @@ export default defineSchema({
       v.literal("MASTER"),
       v.literal("MANAGER"),
       v.literal("CHEF_AGENCE"),
-      v.literal("CAISSIER")
+      v.literal("CAISSIER"),
+      v.literal("BILLER")
     ),
     agencyId: v.optional(v.id("agencies")),
     managerId: v.optional(v.id("users")),
+    billerId: v.optional(v.id("billers")), // For BILLER role
     phone: v.optional(v.string()),
     status: v.union(v.literal("ACTIVE"), v.literal("INACTIVE")),
     creditBalance: v.number(),
@@ -25,6 +27,7 @@ export default defineSchema({
     .index("by_role", ["role"])
     .index("by_agency", ["agencyId"])
     .index("by_manager", ["managerId"])
+    .index("by_biller", ["billerId"])
     .index("by_status", ["status"])
     .searchIndex("search_email", {
       searchField: "email",

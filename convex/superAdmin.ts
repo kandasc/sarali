@@ -97,7 +97,8 @@ export const listAllUsers = query({
         v.literal("MASTER"),
         v.literal("MANAGER"),
         v.literal("CHEF_AGENCE"),
-        v.literal("CAISSIER")
+        v.literal("CAISSIER"),
+        v.literal("BILLER")
       )
     ),
     status: v.optional(v.union(v.literal("ACTIVE"), v.literal("INACTIVE"))),
@@ -121,7 +122,18 @@ export const listAllUsers = query({
       users = users.filter((u) => u.status === args.status);
     }
 
-    return users;
+    // Enrich with biller info for BILLER users
+    const enrichedUsers = await Promise.all(
+      users.map(async (user) => {
+        if (user.role === "BILLER" && user.billerId) {
+          const biller = await ctx.db.get(user.billerId);
+          return { ...user, billerName: biller?.name };
+        }
+        return user;
+      })
+    );
+
+    return enrichedUsers;
   },
 });
 
@@ -137,10 +149,12 @@ export const updateAnyUser = mutation({
         v.literal("MASTER"),
         v.literal("MANAGER"),
         v.literal("CHEF_AGENCE"),
-        v.literal("CAISSIER")
+        v.literal("CAISSIER"),
+        v.literal("BILLER")
       )
     ),
     status: v.optional(v.union(v.literal("ACTIVE"), v.literal("INACTIVE"))),
+    billerId: v.optional(v.id("billers")),
   },
   handler: async (ctx, args) => {
     const superAdmin = await checkSuperAdmin(ctx);
@@ -159,6 +173,7 @@ export const updateAnyUser = mutation({
     if (args.phone !== undefined) updates.phone = args.phone;
     if (args.role !== undefined) updates.role = args.role;
     if (args.status !== undefined) updates.status = args.status;
+    if (args.billerId !== undefined) updates.billerId = args.billerId;
 
     await ctx.db.patch(args.userId, updates);
 
@@ -229,6 +244,7 @@ export const getSystemStats = query({
       MANAGER: allUsers.filter((u) => u.role === "MANAGER").length,
       CHEF_AGENCE: allUsers.filter((u) => u.role === "CHEF_AGENCE").length,
       CAISSIER: allUsers.filter((u) => u.role === "CAISSIER").length,
+      BILLER: allUsers.filter((u) => u.role === "BILLER").length,
     };
 
     const totalTransactionVolume = allTransactions.reduce(
@@ -254,5 +270,75 @@ export const getSystemStats = query({
       totalBillPaymentVolume,
       totalVolume: totalTransactionVolume + totalBillPaymentVolume,
     };
+  },
+});
+
+// Create a BILLER user (only super admin can do this)
+export const createBillerUser = mutation({
+  args: {
+    name: v.string(),
+    email: v.string(),
+    phone: v.optional(v.string()),
+    billerId: v.id("billers"),
+    currency: v.union(v.literal("XOF"), v.literal("GNF")),
+  },
+  handler: async (ctx, args) => {
+    const superAdmin = await checkSuperAdmin(ctx);
+
+    // Verify biller exists
+    const biller = await ctx.db.get(args.billerId);
+    if (!biller) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Biller not found",
+      });
+    }
+
+    // Generate temporary token identifier
+    const tempToken = `temp_${Date.now()}_${Math.random()}`;
+
+    const userId = await ctx.db.insert("users", {
+      name: args.name,
+      email: args.email,
+      phone: args.phone,
+      role: "BILLER",
+      billerId: args.billerId,
+      tokenIdentifier: tempToken,
+      status: "ACTIVE",
+      creditBalance: 0,
+      currency: args.currency,
+      createdBy: superAdmin._id,
+    });
+
+    await logActivity(
+      ctx,
+      superAdmin._id,
+      "CREATE_BILLER_USER",
+      "users",
+      userId,
+      `Created BILLER user ${args.name} for ${biller.name}`
+    );
+
+    return userId;
+  },
+});
+
+// Get all billers (for dropdown when creating biller users)
+export const listBillersForSelect = query({
+  args: {},
+  handler: async (ctx) => {
+    await checkSuperAdmin(ctx);
+    
+    const billers = await ctx.db
+      .query("billers")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .collect();
+    
+    return billers.map(b => ({
+      id: b._id,
+      name: b.name,
+      code: b.code,
+      category: b.category,
+    }));
   },
 });
