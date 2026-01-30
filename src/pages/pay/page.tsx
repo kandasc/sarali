@@ -417,6 +417,9 @@ export default function PublicPaymentPage() {
                   case "CAISSIER":
                     dashboardPath = `/${lang}/cashier`;
                     break;
+                  case "BILLER":
+                    dashboardPath = `/${lang}/biller`;
+                    break;
                 }
                 
                 return (
