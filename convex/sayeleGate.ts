@@ -67,7 +67,7 @@ export const createPaymentIntent = action({
     }
 
     try {
-      const response = await fetch(`${SAYELE_GATE_API_URL}/payments/create`, {
+      const response = await fetch(`${SAYELE_GATE_API_URL}/payment-intents`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -170,7 +170,7 @@ export const checkPaymentStatus = action({
 
     try {
       const response = await fetch(
-        `${SAYELE_GATE_API_URL}/payments/${args.gatewayPaymentId}/status`,
+        `${SAYELE_GATE_API_URL}/payment-intents/${args.gatewayPaymentId}`,
         {
           method: "GET",
           headers: {
