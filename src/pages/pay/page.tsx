@@ -196,6 +196,9 @@ export default function PublicPaymentPage() {
   
   // AI search action
   const searchBillersWithAI = useAction(api.billerSearch.searchBillersWithAI);
+  
+  // SayeleGate payment action
+  const createPaymentIntent = useAction(api.sayeleGate.createPaymentIntent);
 
   const initiateBillPayment = useMutation(api.billPayments.initiateBillPayment);
   const processBillPayment = useMutation(api.billPayments.processBillPayment);
@@ -255,12 +258,41 @@ export default function PublicPaymentPage() {
         currency: data.currency,
       });
 
-      // Step 2: Process payment through Sarali gateway
-      await processBillPayment({
+      // Step 2: Process payment
+      const processResult = await processBillPayment({
         paymentId: result.paymentId,
       });
 
-      // Navigate to success page
+      // Step 3: Handle gateway redirect if required
+      if (processResult.requiresGateway && processResult.gatewayType === "SAYELE_GATE" && processResult.paymentDetails) {
+        const currentLang = location.pathname.split("/")[1];
+        const baseUrl = window.location.origin;
+        
+        // Create payment intent with SayeleGate
+        const gatewayResult = await createPaymentIntent({
+          paymentId: result.paymentId,
+          amount: processResult.paymentDetails.amount,
+          currency: processResult.paymentDetails.currency,
+          customerName: processResult.paymentDetails.customerName,
+          customerPhone: processResult.paymentDetails.customerPhone,
+          customerEmail: processResult.paymentDetails.customerEmail,
+          description: processResult.paymentDetails.description,
+          reference: processResult.paymentDetails.reference,
+          returnUrl: `${baseUrl}/${currentLang}/success?ref=${result.paymentReference}`,
+          cancelUrl: `${baseUrl}/${currentLang}?cancelled=true`,
+        });
+
+        if (gatewayResult.success && gatewayResult.checkoutUrl) {
+          // Redirect to SayeleGate checkout
+          window.location.href = gatewayResult.checkoutUrl;
+          return;
+        } else {
+          toast.error(gatewayResult.error || "Erreur lors de la création du paiement");
+          return;
+        }
+      }
+
+      // Navigate to success page for non-gateway payments
       const currentLang = location.pathname.split("/")[1];
       navigate(`/${currentLang}/success?ref=${result.paymentReference}`);
     } catch (error) {

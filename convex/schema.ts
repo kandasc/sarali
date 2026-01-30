@@ -174,6 +174,12 @@ export default defineSchema({
     countries: v.array(v.string()),
     feePercentage: v.optional(v.number()),
     feeFixed: v.optional(v.number()),
+    // Payment gateway configuration
+    paymentGateway: v.optional(v.union(
+      v.literal("SAYELE_GATE"),
+      v.literal("MANUAL"),
+      v.literal("NONE")
+    )),
   })
     .index("by_code", ["code"])
     .index("by_category", ["category"])
@@ -201,6 +207,14 @@ export default defineSchema({
     totalAmount: v.number(),
     paymentReference: v.string(),
     saraliTransactionId: v.optional(v.string()),
+    // Payment gateway fields
+    paymentGateway: v.optional(v.union(
+      v.literal("SAYELE_GATE"),
+      v.literal("MANUAL"),
+      v.literal("NONE")
+    )),
+    gatewayPaymentId: v.optional(v.string()),
+    gatewayCheckoutUrl: v.optional(v.string()),
     status: v.union(
       v.literal("PENDING"),
       v.literal("PROCESSING"),
@@ -214,7 +228,8 @@ export default defineSchema({
     .index("by_reference", ["paymentReference"])
     .index("by_phone", ["customerPhone"])
     .index("by_status", ["status"])
-    .index("by_sarali_id", ["saraliTransactionId"]),
+    .index("by_sarali_id", ["saraliTransactionId"])
+    .index("by_gateway_payment", ["gatewayPaymentId"]),
 
   bulkPayments: defineTable({
     batchReference: v.string(),

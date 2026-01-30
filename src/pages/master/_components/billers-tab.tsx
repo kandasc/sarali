@@ -62,6 +62,7 @@ const billerSchema = z.object({
   countries: z.array(z.string()).min(1, "Sélectionnez au moins un pays"),
   feePercentage: z.number().min(0).max(100).optional(),
   feeFixed: z.number().min(0).optional(),
+  paymentGateway: z.enum(["SAYELE_GATE", "MANUAL", "NONE"]).optional(),
 });
 
 type BillerFormData = z.infer<typeof billerSchema>;
@@ -302,6 +303,7 @@ function EditBillerDialog({ biller, onClose }: {
     feeFixed?: number;
     logoUrl?: string | null;
     logoStorageId?: Id<"_storage">;
+    paymentGateway?: "SAYELE_GATE" | "MANUAL" | "NONE";
   };
   onClose: () => void;
 }) {
@@ -327,6 +329,7 @@ function EditBillerDialog({ biller, onClose }: {
       countries: biller.countries,
       feePercentage: biller.feePercentage || 0,
       feeFixed: biller.feeFixed || 0,
+      paymentGateway: biller.paymentGateway || "NONE",
     },
   });
 
@@ -574,6 +577,32 @@ function EditBillerDialog({ biller, onClose }: {
 
           <FormField
             control={form.control}
+            name="paymentGateway"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Passerelle de paiement</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || "NONE"}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner une passerelle" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="SAYELE_GATE">SayeleGate</SelectItem>
+                    <SelectItem value="MANUAL">Manuel</SelectItem>
+                    <SelectItem value="NONE">Aucune</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Passerelle utilisée pour traiter les paiements de ce fournisseur
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="isActive"
             render={({ field }) => (
               <FormItem className="flex items-center justify-between rounded-lg border p-4">
@@ -628,6 +657,7 @@ function CreateBillerDialog() {
       countries: [],
       feePercentage: 0,
       feeFixed: 0,
+      paymentGateway: "NONE",
     },
   });
 
@@ -886,6 +916,32 @@ function CreateBillerDialog() {
 
             <FormField
               control={form.control}
+              name="paymentGateway"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Passerelle de paiement</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || "NONE"}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une passerelle" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="SAYELE_GATE">SayeleGate</SelectItem>
+                      <SelectItem value="MANUAL">Manuel</SelectItem>
+                      <SelectItem value="NONE">Aucune</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Passerelle utilisée pour traiter les paiements de ce fournisseur
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="isActive"
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-4">
@@ -1054,6 +1110,15 @@ export default function BillersTab() {
                       <p className="text-sm text-muted-foreground">{biller.description}</p>
                     </div>
                   )}
+
+                  <div>
+                    <p className="text-sm font-medium">Passerelle</p>
+                    <Badge variant={biller.paymentGateway === "SAYELE_GATE" ? "default" : "secondary"}>
+                      {biller.paymentGateway === "SAYELE_GATE" && "SayeleGate"}
+                      {biller.paymentGateway === "MANUAL" && "Manuel"}
+                      {(!biller.paymentGateway || biller.paymentGateway === "NONE") && "Aucune"}
+                    </Badge>
+                  </div>
 
                   <div className="flex items-center gap-2 pt-2">
                     <Dialog open={editingBiller?._id === biller._id} onOpenChange={(open) => !open && setEditingBiller(null)}>

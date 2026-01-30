@@ -75,6 +75,11 @@ export const createBiller = mutation({
     countries: v.array(v.string()),
     feePercentage: v.optional(v.number()),
     feeFixed: v.optional(v.number()),
+    paymentGateway: v.optional(v.union(
+      v.literal("SAYELE_GATE"),
+      v.literal("MANUAL"),
+      v.literal("NONE")
+    )),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -125,6 +130,7 @@ export const createBiller = mutation({
       countries: args.countries,
       feePercentage: args.feePercentage,
       feeFixed: args.feeFixed,
+      paymentGateway: args.paymentGateway,
     });
 
     return billerId;
@@ -154,6 +160,11 @@ export const updateBiller = mutation({
     countries: v.optional(v.array(v.string())),
     feePercentage: v.optional(v.number()),
     feeFixed: v.optional(v.number()),
+    paymentGateway: v.optional(v.union(
+      v.literal("SAYELE_GATE"),
+      v.literal("MANUAL"),
+      v.literal("NONE")
+    )),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -217,6 +228,8 @@ export const updateBiller = mutation({
     if (args.feePercentage !== undefined)
       updates.feePercentage = args.feePercentage;
     if (args.feeFixed !== undefined) updates.feeFixed = args.feeFixed;
+    if (args.paymentGateway !== undefined)
+      updates.paymentGateway = args.paymentGateway;
 
     await ctx.db.patch(args.billerId, updates);
 

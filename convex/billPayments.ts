@@ -46,6 +46,8 @@ export const initiateBillPayment = mutation({
 
     // Get biller info if provided
     let fees = calculateFees(args.amount);
+    let paymentGateway: "SAYELE_GATE" | "MANUAL" | "NONE" | undefined;
+    
     if (args.billerId) {
       const biller = await ctx.db.get(args.billerId);
       if (biller) {
@@ -55,6 +57,7 @@ export const initiateBillPayment = mutation({
           : 0;
         const fixedFee = biller.feeFixed || 0;
         fees = percentageFee + fixedFee;
+        paymentGateway = biller.paymentGateway;
       }
     }
 
@@ -78,6 +81,7 @@ export const initiateBillPayment = mutation({
       fees,
       totalAmount,
       paymentReference,
+      paymentGateway,
       status: "PENDING",
     });
 
@@ -87,12 +91,12 @@ export const initiateBillPayment = mutation({
       amount: args.amount,
       fees,
       totalAmount,
+      paymentGateway,
     };
   },
 });
 
-// Process payment with Sarali gateway
-// NOTE: This is a placeholder. Replace with actual Sarali API integration
+// Process payment - now returns checkout URL for gateway payments
 export const processBillPayment = mutation({
   args: {
     paymentId: v.id("billPayments"),
@@ -114,19 +118,34 @@ export const processBillPayment = mutation({
       });
     }
 
-    // Update to processing
-    await ctx.db.patch(args.paymentId, {
-      status: "PROCESSING",
-    });
+    // If payment has SayeleGate configured, return info for frontend to call action
+    if (payment.paymentGateway === "SAYELE_GATE") {
+      // Mark as processing
+      await ctx.db.patch(args.paymentId, {
+        status: "PROCESSING",
+      });
 
-    // TODO: Integrate with Sarali gateway API here
-    // For now, we'll simulate a successful payment
-    // In production, this should be replaced with actual API calls to Sarali
+      return {
+        success: true,
+        requiresGateway: true,
+        paymentReference: payment.paymentReference,
+        gatewayType: "SAYELE_GATE" as const,
+        paymentDetails: {
+          paymentId: args.paymentId,
+          amount: payment.totalAmount,
+          currency: payment.currency,
+          customerName: payment.customerName,
+          customerPhone: payment.customerPhone,
+          customerEmail: payment.customerEmail,
+          description: `Paiement ${payment.provider} - ${payment.billReference}`,
+          reference: payment.paymentReference,
+        },
+      };
+    }
 
-    // Simulate Sarali transaction ID
+    // For MANUAL or NONE gateway, simulate successful payment
     const saraliTransactionId = `SARALI-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
 
-    // Update payment as completed
     await ctx.db.patch(args.paymentId, {
       status: "COMPLETED",
       saraliTransactionId,
@@ -134,6 +153,7 @@ export const processBillPayment = mutation({
 
     return {
       success: true,
+      requiresGateway: false,
       paymentReference: payment.paymentReference,
       saraliTransactionId,
     };
