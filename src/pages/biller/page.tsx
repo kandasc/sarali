@@ -15,10 +15,11 @@ import { useNavigate, useParams } from "react-router-dom";
 function BillerDashboardContent() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const billerInfo = useQuery(api.billerDashboard.getBillerInfo);
+  const activeSimulation = useQuery(api.roleSimulation.getActiveSimulation);
   const navigate = useNavigate();
   const { lng } = useParams<{ lng: string }>();
 
-  if (currentUser === undefined || billerInfo === undefined) {
+  if (currentUser === undefined || billerInfo === undefined || activeSimulation === undefined) {
     return (
       <DashboardLayout title="Espace Fournisseur">
         <div className="space-y-4">
@@ -50,8 +51,11 @@ function BillerDashboardContent() {
     );
   }
 
-  // Check if user is a biller
-  if (currentUser.role !== "BILLER") {
+  // Check if user is a biller or simulating a biller
+  const isSimulatingBiller = activeSimulation?.simulatedRole === "BILLER";
+  const isBillerRole = currentUser.role === "BILLER";
+  
+  if (!isBillerRole && !isSimulatingBiller) {
     const langPrefix = lng ? `/${lng}` : "/fr";
     // Redirect to appropriate dashboard based on role
     if (currentUser.role === "SUPER_ADMIN") {
