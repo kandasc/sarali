@@ -205,6 +205,8 @@ export const getTransactions = query({
 export const getDailyReport = query({
   args: {
     days: v.optional(v.number()),
+    includeTest: v.optional(v.boolean()),
+    includeAllStatuses: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -261,12 +263,20 @@ export const getDailyReport = query({
       .query("billPayments")
       .collect();
     
-    const payments = allPayments.filter(
-      p => p.billerId === billerId && 
-           p._creationTime >= startDate &&
-           p.status === "COMPLETED" &&
-           !p.isTest
+    // Filter by biller and date
+    let payments = allPayments.filter(
+      p => p.billerId === billerId && p._creationTime >= startDate
     );
+
+    // Filter by status (default to all statuses for better visibility)
+    if (!args.includeAllStatuses) {
+      payments = payments.filter(p => p.status === "COMPLETED" || p.status === "PROCESSING");
+    }
+
+    // Filter test transactions unless includeTest is true
+    if (!args.includeTest) {
+      payments = payments.filter(p => !p.isTest);
+    }
 
     // Group by day
     const dailyData: Record<string, { date: string; count: number; amount: number; fees: number }> = {};

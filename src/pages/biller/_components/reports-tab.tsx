@@ -17,7 +17,9 @@ import {
 } from "@/components/ui/select.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Download, TrendingUp, Calendar } from "lucide-react";
+import { Switch } from "@/components/ui/switch.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { Download, TrendingUp, Calendar, TestTube } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -35,9 +37,12 @@ import { fr } from "date-fns/locale";
 
 export default function ReportsTab() {
   const [period, setPeriod] = useState<"7" | "14" | "30" | "90">("30");
+  const [includeTest, setIncludeTest] = useState(true);
 
   const dailyReport = useQuery(api.billerDashboard.getDailyReport, {
     days: parseInt(period),
+    includeTest,
+    includeAllStatuses: true,
   });
   const dashboardStats = useQuery(api.billerDashboard.getDashboardStats);
 
@@ -104,20 +109,33 @@ export default function ReportsTab() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Période:</span>
-              <Select value={period} onValueChange={(v) => setPeriod(v as "7" | "14" | "30" | "90")}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 derniers jours</SelectItem>
-                  <SelectItem value="14">14 derniers jours</SelectItem>
-                  <SelectItem value="30">30 derniers jours</SelectItem>
-                  <SelectItem value="90">90 derniers jours</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Période:</span>
+                <Select value={period} onValueChange={(v) => setPeriod(v as "7" | "14" | "30" | "90")}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">7 derniers jours</SelectItem>
+                    <SelectItem value="14">14 derniers jours</SelectItem>
+                    <SelectItem value="30">30 derniers jours</SelectItem>
+                    <SelectItem value="90">90 derniers jours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="include-test"
+                  checked={includeTest}
+                  onCheckedChange={setIncludeTest}
+                />
+                <Label htmlFor="include-test" className="flex items-center gap-1 text-sm cursor-pointer">
+                  <TestTube className="h-4 w-4" />
+                  Inclure test
+                </Label>
+              </div>
             </div>
             <Button variant="outline" onClick={handleExportCSV}>
               <Download className="h-4 w-4 mr-2" />

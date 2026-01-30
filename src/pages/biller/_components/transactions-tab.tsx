@@ -23,9 +23,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 import {
   CheckCircle,
   Clock,
@@ -33,22 +41,33 @@ import {
   Search,
   TestTube,
   Rocket,
+  User,
+  Phone,
+  Mail,
+  Receipt,
+  CreditCard,
+  Calendar,
+  Hash,
+  FileText,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import type { Doc } from "@/convex/_generated/dataModel.d.ts";
 
 type StatusFilter = "all" | "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
 type ModeFilter = "all" | "test" | "live";
+type Transaction = Doc<"billPayments">;
 
 export default function TransactionsTab() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [modeFilter, setModeFilter] = useState<ModeFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   const transactions = useQuery(api.billerDashboard.getTransactions, {
     status: statusFilter === "all" ? undefined : statusFilter,
     isTest: modeFilter === "all" ? undefined : modeFilter === "test",
-    limit: 50,
+    limit: 100,
   });
 
   const getStatusBadge = (status: string) => {
@@ -161,7 +180,7 @@ export default function TransactionsTab() {
         <CardHeader>
           <CardTitle>Transactions</CardTitle>
           <CardDescription>
-            {filteredTransactions?.length || 0} transaction(s) trouvée(s)
+            {filteredTransactions?.length || 0} transaction(s) trouvée(s) • Cliquez sur une ligne pour voir les détails
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -182,7 +201,11 @@ export default function TransactionsTab() {
                 </TableHeader>
                 <TableBody>
                   {filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction._id}>
+                    <TableRow 
+                      key={transaction._id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedTransaction(transaction)}
+                    >
                       <TableCell className="font-mono text-xs">
                         {transaction.paymentReference}
                       </TableCell>
@@ -232,6 +255,183 @@ export default function TransactionsTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Transaction Detail Dialog */}
+      <Dialog open={!!selectedTransaction} onOpenChange={() => setSelectedTransaction(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              Détails de la Transaction
+            </DialogTitle>
+            <DialogDescription>
+              Référence: {selectedTransaction?.paymentReference}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedTransaction && (
+            <div className="space-y-6">
+              {/* Status and Mode */}
+              <div className="flex items-center justify-between">
+                {getStatusBadge(selectedTransaction.status)}
+                {selectedTransaction.isTest ? (
+                  <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+                    <TestTube className="h-3 w-3 mr-1" />
+                    Mode Test
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-green-500 text-green-600">
+                    <Rocket className="h-3 w-3 mr-1" />
+                    Mode Live
+                  </Badge>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Customer Info */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Informations Client
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Nom:</span>
+                    <p className="font-medium">{selectedTransaction.customerName}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Phone className="h-3 w-3" /> Téléphone:
+                    </span>
+                    <p className="font-medium">{selectedTransaction.customerPhone}</p>
+                  </div>
+                  {selectedTransaction.customerEmail && (
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Mail className="h-3 w-3" /> Email:
+                      </span>
+                      <p className="font-medium">{selectedTransaction.customerEmail}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Payment Details */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Détails du Paiement
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Montant:</span>
+                    <p className="font-medium text-lg">
+                      {selectedTransaction.amount.toLocaleString()} {selectedTransaction.currency}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Frais:</span>
+                    <p className="font-medium">
+                      {selectedTransaction.fees.toLocaleString()} {selectedTransaction.currency}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Montant Total:</span>
+                    <p className="font-bold text-lg text-primary">
+                      {selectedTransaction.totalAmount.toLocaleString()} {selectedTransaction.currency}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* References */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  Références
+                </h4>
+                <div className="grid grid-cols-1 gap-3 text-sm">
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <span className="text-muted-foreground">Réf. Paiement:</span>
+                    <code className="font-mono text-xs bg-background px-2 py-1 rounded">
+                      {selectedTransaction.paymentReference}
+                    </code>
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <span className="text-muted-foreground">Réf. Facture:</span>
+                    <code className="font-mono text-xs bg-background px-2 py-1 rounded">
+                      {selectedTransaction.billReference}
+                    </code>
+                  </div>
+                  {selectedTransaction.accountNumber && (
+                    <div className="flex items-center justify-between p-2 bg-muted rounded">
+                      <span className="text-muted-foreground">N° Compte:</span>
+                      <code className="font-mono text-xs bg-background px-2 py-1 rounded">
+                        {selectedTransaction.accountNumber}
+                      </code>
+                    </div>
+                  )}
+                  {selectedTransaction.saraliTransactionId && (
+                    <div className="flex items-center justify-between p-2 bg-muted rounded">
+                      <span className="text-muted-foreground">ID Sarali:</span>
+                      <code className="font-mono text-xs bg-background px-2 py-1 rounded">
+                        {selectedTransaction.saraliTransactionId}
+                      </code>
+                    </div>
+                  )}
+                  {selectedTransaction.gatewayPaymentId && (
+                    <div className="flex items-center justify-between p-2 bg-muted rounded">
+                      <span className="text-muted-foreground">ID Gateway:</span>
+                      <code className="font-mono text-xs bg-background px-2 py-1 rounded">
+                        {selectedTransaction.gatewayPaymentId}
+                      </code>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Timestamps */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Dates
+                </h4>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Créée le:</span>
+                    <span className="font-medium">
+                      {format(new Date(selectedTransaction._creationTime), "PPpp", { locale: fr })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {selectedTransaction.errorMessage && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2 text-destructive">
+                      <FileText className="h-4 w-4" />
+                      Message d'Erreur
+                    </h4>
+                    <p className="text-sm bg-destructive/10 text-destructive p-3 rounded border border-destructive/20">
+                      {selectedTransaction.errorMessage}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
