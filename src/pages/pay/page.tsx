@@ -30,6 +30,7 @@ import Footer from "@/components/footer.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { useDebounce } from "@/hooks/use-debounce.ts";
+import AirtimeTopup from "./_components/airtime-topup.tsx";
 
 const paymentSchema = z.object({
   billReference: z.string().min(1, "Référence de facture requise"),
@@ -124,6 +125,7 @@ export default function PublicPaymentPage() {
   const [selectedCountry, setSelectedCountry] = useState<Country>("GN");
   const [isDetectingCountry, setIsDetectingCountry] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<BillCategory | null>(null);
+  const [showAirtimeFlow, setShowAirtimeFlow] = useState(false);
   const [selectedBiller, setSelectedBiller] = useState<{
     id: Id<"billers">;
     name: string;
@@ -229,6 +231,7 @@ export default function PublicPaymentPage() {
     // Reset selections when country changes
     setSelectedCategory(null);
     setSelectedBiller(null);
+    setShowAirtimeFlow(false);
     setSearchQuery("");
     setSearchResults(null);
   }, [selectedCountry, setValue]);
@@ -314,6 +317,7 @@ export default function PublicPaymentPage() {
   const handleBackToCategories = () => {
     setSelectedCategory(null);
     setSelectedBiller(null);
+    setShowAirtimeFlow(false);
   };
 
   const handleBackToBillers = () => {
@@ -465,7 +469,7 @@ export default function PublicPaymentPage() {
           </div>
           
           {/* Country Selector - Dropdown */}
-          {!selectedBiller && (
+          {!selectedBiller && !showAirtimeFlow && (
             <div className="flex justify-center">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -506,7 +510,7 @@ export default function PublicPaymentPage() {
           )}
           
           {/* AI Search Bar */}
-          {!selectedBiller && (
+          {!selectedBiller && !showAirtimeFlow && (
             <Card className="border-primary/30 shadow-lg">
               <CardContent className="pt-6">
                 <div className="relative">
@@ -648,7 +652,7 @@ export default function PublicPaymentPage() {
           )}
           
           {/* Featured Section - Dynamic by country */}
-          {!selectedBiller && !selectedCategory && featuredByCountry[selectedCountry] && (
+          {!selectedBiller && !selectedCategory && !showAirtimeFlow && featuredByCountry[selectedCountry] && (
             <div className="space-y-4">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-foreground mb-1">
@@ -761,7 +765,7 @@ export default function PublicPaymentPage() {
           )}
 
           {/* Step 1: Category Selection */}
-          {!selectedCategory && (
+          {!selectedCategory && !showAirtimeFlow && (
             <Card>
               <CardHeader>
                 <CardTitle>Sélectionnez une Catégorie</CardTitle>
@@ -774,7 +778,13 @@ export default function PublicPaymentPage() {
                   {(Object.entries(categoryLabels) as [BillCategory, string][]).map(([category, label]) => (
                     <button
                       key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => {
+                        if (category === "AIRTIME") {
+                          setShowAirtimeFlow(true);
+                        } else {
+                          setSelectedCategory(category);
+                        }
+                      }}
                       className="flex flex-col items-center gap-3 p-6 rounded-lg border-2 border-muted hover:border-primary hover:bg-primary/5 transition-all"
                     >
                       <div className="p-3 rounded-full bg-primary/10 text-primary">
@@ -788,8 +798,22 @@ export default function PublicPaymentPage() {
             </Card>
           )}
 
+          {/* Airtime Top-up Flow */}
+          {showAirtimeFlow && (
+            <AirtimeTopup
+              country={selectedCountry}
+              currency={countryConfig[selectedCountry].currency}
+              onBack={() => setShowAirtimeFlow(false)}
+              onSuccess={(reference) => {
+                const currentLang = location.pathname.split("/")[1];
+                navigate(`/${currentLang}/success?ref=${reference}`);
+              }}
+              brandPrimaryColor={brandPrimaryColor}
+            />
+          )}
+
           {/* Step 2: Biller Selection */}
-          {selectedCategory && !selectedBiller && (
+          {selectedCategory && !selectedBiller && !showAirtimeFlow && (
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -1059,19 +1083,21 @@ export default function PublicPaymentPage() {
           )}
 
           {/* Info */}
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="pt-6">
-              <div className="space-y-2 text-sm">
-                <p className="font-semibold">Informations importantes :</p>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>Les paiements sont traités instantanément</li>
-                  <li>Un reçu vous sera envoyé après le paiement</li>
-                  <li>Conservez votre référence de paiement pour toute réclamation</li>
-                  <li>Des frais s'appliquent selon le fournisseur sélectionné</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
+          {!showAirtimeFlow && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <div className="space-y-2 text-sm">
+                  <p className="font-semibold">Informations importantes :</p>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>Les paiements sont traités instantanément</li>
+                    <li>Un reçu vous sera envoyé après le paiement</li>
+                    <li>Conservez votre référence de paiement pour toute réclamation</li>
+                    <li>Des frais s'appliquent selon le fournisseur sélectionné</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 

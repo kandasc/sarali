@@ -76,5 +76,18 @@
   "errors.amountRequired": "Amount required",
   "errors.paymentFailed": "Error processing payment",
   "notFound.title": "Payment reference missing",
-  "notFound.paymentNotFound": "Payment not found"
+  "notFound.paymentNotFound": "Payment not found",
+  "airtime.title": "Airtime Top-up",
+  "airtime.selectOperator": "Select your operator",
+  "airtime.selectAmount": "Choose the top-up amount",
+  "airtime.confirmTopup": "Confirm your top-up",
+  "airtime.processing": "Processing...",
+  "airtime.success": "Top-up successful!",
+  "airtime.error": "Top-up error",
+  "airtime.amount": "Top-up amount",
+  "airtime.phone": "Phone number",
+  "airtime.operator": "Operator",
+  "airtime.confirm": "Confirm top-up",
+  "airtime.retry": "Retry",
+  "airtime.back": "Back"
 }

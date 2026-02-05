@@ -76,5 +76,18 @@
   "errors.amountRequired": "Montant requis",
   "errors.paymentFailed": "Erreur lors du traitement du paiement",
   "notFound.title": "Référence de paiement manquante",
-  "notFound.paymentNotFound": "Paiement introuvable"
+  "notFound.paymentNotFound": "Paiement introuvable",
+  "airtime.title": "Recharge Mobile",
+  "airtime.selectOperator": "Sélectionnez votre opérateur",
+  "airtime.selectAmount": "Choisissez le montant de la recharge",
+  "airtime.confirmTopup": "Confirmez votre recharge",
+  "airtime.processing": "Traitement en cours...",
+  "airtime.success": "Recharge réussie!",
+  "airtime.error": "Erreur de recharge",
+  "airtime.amount": "Montant de la recharge",
+  "airtime.phone": "Numéro de téléphone",
+  "airtime.operator": "Opérateur",
+  "airtime.confirm": "Confirmer la recharge",
+  "airtime.retry": "Réessayer",
+  "airtime.back": "Retour"
 }
