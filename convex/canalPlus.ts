@@ -29,6 +29,46 @@ const CANAL_PLUS_CONFIG = {
 let cachedTokenTest: { accessToken: string; refreshToken: string; expiresAt: number } | null = null;
 let cachedTokenProd: { accessToken: string; refreshToken: string; expiresAt: number } | null = null;
 
+// Helper function to refresh token
+async function refreshAuthToken(isProduction: boolean, refreshToken: string): Promise<string> {
+  const config = isProduction ? CANAL_PLUS_CONFIG.PRODUCTION : CANAL_PLUS_CONFIG.TEST;
+  
+  try {
+    const response = await fetch(`${config.baseUrl}/auth/refresh-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+    
+    if (!response.ok) {
+      // If refresh fails, return empty string to trigger full login
+      return "";
+    }
+    
+    const data = await response.json();
+    
+    // Cache the new token
+    const newToken = {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken || refreshToken, // Keep old refresh token if not provided
+      expiresAt: Date.now() + (data.expiresIn * 1000),
+    };
+    
+    if (isProduction) {
+      cachedTokenProd = newToken;
+    } else {
+      cachedTokenTest = newToken;
+    }
+    
+    return data.accessToken;
+  } catch {
+    // On error, return empty string to trigger full login
+    return "";
+  }
+}
+
 // Helper function to get auth token
 async function getAuthToken(isProduction: boolean): Promise<string> {
   const config = isProduction ? CANAL_PLUS_CONFIG.PRODUCTION : CANAL_PLUS_CONFIG.TEST;
@@ -39,12 +79,21 @@ async function getAuthToken(isProduction: boolean): Promise<string> {
     throw new Error("Production credentials not configured. Please set CANAL_PLUS_PROD_BASE_URL, CANAL_PLUS_PROD_EMAIL, and CANAL_PLUS_PROD_PASSWORD environment variables.");
   }
   
-  // Check if we have a valid cached token
+  // Check if we have a valid cached token (with 60 second buffer)
   if (cachedToken && cachedToken.expiresAt > Date.now() + 60000) {
     return cachedToken.accessToken;
   }
   
-  // Get new token
+  // If we have a cached token with refresh token but it's expired, try to refresh
+  if (cachedToken && cachedToken.refreshToken) {
+    const refreshedToken = await refreshAuthToken(isProduction, cachedToken.refreshToken);
+    if (refreshedToken) {
+      return refreshedToken;
+    }
+    // If refresh failed, continue to full login below
+  }
+  
+  // Get new token via full login
   const response = await fetch(`${config.baseUrl}/auth/login`, {
     method: "POST",
     headers: {
@@ -355,7 +404,7 @@ export const processReabonnement = action({
       };
       
       const response = await fetch(
-        `${config.baseUrl}/securecanal/api/reabonnement`,
+        `${config.baseUrl}/api/reabo/reabonnement`,
         {
           method: "POST",
           headers: {
