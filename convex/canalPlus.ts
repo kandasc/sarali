@@ -4,6 +4,10 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 
 // Canal+ API Configuration
+// Production credentials should be set via environment variables:
+// - CANAL_PLUS_PROD_BASE_URL: Production API base URL
+// - CANAL_PLUS_PROD_EMAIL: Production API email
+// - CANAL_PLUS_PROD_PASSWORD: Production API password
 const CANAL_PLUS_CONFIG = {
   TEST: {
     baseUrl: "http://162.19.114.155:8088",
@@ -12,15 +16,28 @@ const CANAL_PLUS_CONFIG = {
       password: "external2711@!",
     },
   },
-  // Production config will be added when credentials are provided
+  PRODUCTION: {
+    baseUrl: process.env.CANAL_PLUS_PROD_BASE_URL || "",
+    credentials: {
+      email: process.env.CANAL_PLUS_PROD_EMAIL || "",
+      password: process.env.CANAL_PLUS_PROD_PASSWORD || "",
+    },
+  },
 };
 
-// Token cache (simple in-memory cache for demo - in production use a proper cache)
-let cachedToken: { accessToken: string; refreshToken: string; expiresAt: number } | null = null;
+// Token cache - separate for test and production
+let cachedTokenTest: { accessToken: string; refreshToken: string; expiresAt: number } | null = null;
+let cachedTokenProd: { accessToken: string; refreshToken: string; expiresAt: number } | null = null;
 
 // Helper function to get auth token
 async function getAuthToken(isProduction: boolean): Promise<string> {
-  const config = CANAL_PLUS_CONFIG.TEST; // Use TEST for now
+  const config = isProduction ? CANAL_PLUS_CONFIG.PRODUCTION : CANAL_PLUS_CONFIG.TEST;
+  const cachedToken = isProduction ? cachedTokenProd : cachedTokenTest;
+  
+  // Validate production config
+  if (isProduction && (!config.baseUrl || !config.credentials.email || !config.credentials.password)) {
+    throw new Error("Production credentials not configured. Please set CANAL_PLUS_PROD_BASE_URL, CANAL_PLUS_PROD_EMAIL, and CANAL_PLUS_PROD_PASSWORD environment variables.");
+  }
   
   // Check if we have a valid cached token
   if (cachedToken && cachedToken.expiresAt > Date.now() + 60000) {
@@ -43,14 +60,25 @@ async function getAuthToken(isProduction: boolean): Promise<string> {
   
   const data = await response.json();
   
-  // Cache the token
-  cachedToken = {
+  // Cache the token (separate for test/prod)
+  const newToken = {
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
     expiresAt: Date.now() + (data.expiresIn * 1000),
   };
   
+  if (isProduction) {
+    cachedTokenProd = newToken;
+  } else {
+    cachedTokenTest = newToken;
+  }
+  
   return data.accessToken;
+}
+
+// Helper to get config based on environment
+function getConfig(isProduction: boolean) {
+  return isProduction ? CANAL_PLUS_CONFIG.PRODUCTION : CANAL_PLUS_CONFIG.TEST;
 }
 
 // Check decoder / subscriber verification
@@ -77,8 +105,9 @@ export const checkDecoder = action({
     executionTime?: string;
   }> => {
     try {
-      const token = await getAuthToken(args.isProduction || false);
-      const config = CANAL_PLUS_CONFIG.TEST;
+      const isProd = args.isProduction || false;
+      const token = await getAuthToken(isProd);
+      const config = getConfig(isProd);
       
       const response = await fetch(
         `${config.baseUrl}/securecanal/api/check-decoder?numAbonne=${args.decoderNumber}`,
@@ -147,8 +176,9 @@ export const getAllPackages = action({
     }>;
   }> => {
     try {
-      const token = await getAuthToken(args.isProduction || false);
-      const config = CANAL_PLUS_CONFIG.TEST;
+      const isProd = args.isProduction || false;
+      const token = await getAuthToken(isProd);
+      const config = getConfig(isProd);
       
       const response = await fetch(
         `${config.baseUrl}/securecanal/api/allPackages`,
@@ -206,8 +236,9 @@ export const getPackageDetails = action({
     };
   }> => {
     try {
-      const token = await getAuthToken(args.isProduction || false);
-      const config = CANAL_PLUS_CONFIG.TEST;
+      const isProd = args.isProduction || false;
+      const token = await getAuthToken(isProd);
+      const config = getConfig(isProd);
       
       const response = await fetch(
         `${config.baseUrl}/securecanal/api/packages/${args.packageId}/structured`,
@@ -262,8 +293,9 @@ export const processReabonnement = action({
     };
   }> => {
     try {
-      const token = await getAuthToken(args.isProduction || false);
-      const config = CANAL_PLUS_CONFIG.TEST;
+      const isProd = args.isProduction || false;
+      const token = await getAuthToken(isProd);
+      const config = getConfig(isProd);
       
       // Clean phone number (remove country code if present)
       let cleanPhone = args.phoneNumber.replace(/\s/g, "");
