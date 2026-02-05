@@ -23,6 +23,7 @@ import type * as http from "../http.js";
 import type * as migrations from "../migrations.js";
 import type * as ocr from "../ocr.js";
 import type * as rbac from "../rbac.js";
+import type * as reloadly from "../reloadly.js";
 import type * as roleSimulation from "../roleSimulation.js";
 import type * as sayeleGate from "../sayeleGate.js";
 import type * as sayeleGateMutations from "../sayeleGateMutations.js";
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   ocr: typeof ocr;
   rbac: typeof rbac;
+  reloadly: typeof reloadly;
   roleSimulation: typeof roleSimulation;
   sayeleGate: typeof sayeleGate;
   sayeleGateMutations: typeof sayeleGateMutations;

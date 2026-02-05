@@ -66,6 +66,7 @@ export const createBiller = mutation({
       v.literal("INTERNET"),
       v.literal("PHONE"),
       v.literal("TV"),
+      v.literal("AIRTIME"),
       v.literal("OTHER")
     ),
     logoStorageId: v.optional(v.id("_storage")),
@@ -150,6 +151,7 @@ export const updateBiller = mutation({
         v.literal("INTERNET"),
         v.literal("PHONE"),
         v.literal("TV"),
+        v.literal("AIRTIME"),
         v.literal("OTHER")
       )
     ),
@@ -330,6 +332,7 @@ export const listActiveBillers = query({
         v.literal("INTERNET"),
         v.literal("PHONE"),
         v.literal("TV"),
+        v.literal("AIRTIME"),
         v.literal("OTHER")
       )
     ),

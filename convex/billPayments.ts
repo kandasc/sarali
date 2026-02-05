@@ -23,6 +23,7 @@ export const initiateBillPayment = mutation({
       v.literal("INTERNET"),
       v.literal("PHONE"),
       v.literal("TV"),
+      v.literal("AIRTIME"),
       v.literal("OTHER")
     ),
     provider: v.string(),
@@ -220,6 +221,7 @@ export const getBillProviders = query({
       v.literal("INTERNET"),
       v.literal("PHONE"),
       v.literal("TV"),
+      v.literal("AIRTIME"),
       v.literal("OTHER")
     ),
   },
@@ -232,6 +234,7 @@ export const getBillProviders = query({
       WATER: ["SEG (Service des Eaux de Guinée)", "SODECI (Côte d'Ivoire)"],
       INTERNET: ["MTN", "Orange", "Cellcom", "Afribone"],
       PHONE: ["MTN", "Orange", "Cellcom"],
+      AIRTIME: ["MTN", "Orange", "Moov", "Free"],
       TV: ["Canal+", "StarTimes", "MyTV"],
       OTHER: ["Autre fournisseur"],
     };

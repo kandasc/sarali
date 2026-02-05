@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, ChevronDown, MapPin } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, ChevronDown, MapPin, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -43,7 +43,7 @@ const paymentSchema = z.object({
 
 type PaymentForm = z.infer<typeof paymentSchema>;
 
-type BillCategory = "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "OTHER";
+type BillCategory = "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "AIRTIME" | "OTHER";
 
 const categoryIcons: Record<BillCategory, React.ReactNode> = {
   ELECTRICITY: <Zap className="h-8 w-8" />,
@@ -51,6 +51,7 @@ const categoryIcons: Record<BillCategory, React.ReactNode> = {
   INTERNET: <Wifi className="h-8 w-8" />,
   PHONE: <Phone className="h-8 w-8" />,
   TV: <Tv className="h-8 w-8" />,
+  AIRTIME: <Smartphone className="h-8 w-8" />,
   OTHER: <Package className="h-8 w-8" />,
 };
 
@@ -60,14 +61,16 @@ const categoryLabels: Record<BillCategory, string> = {
   INTERNET: "Internet",
   PHONE: "Téléphone",
   TV: "Télévision",
+  AIRTIME: "Recharge Mobile",
   OTHER: "Autre",
 };
 
-type Country = "GN" | "CI";
+type Country = "GN" | "CI" | "SN";
 
 const countryConfig: Record<Country, { name: string; flag: string; currency: "XOF" | "GNF" }> = {
   GN: { name: "Guinée", flag: "🇬🇳", currency: "GNF" },
   CI: { name: "Côte d'Ivoire", flag: "🇨🇮", currency: "XOF" },
+  SN: { name: "Sénégal", flag: "🇸🇳", currency: "XOF" },
 };
 
 // Featured content by country
@@ -77,7 +80,7 @@ const featuredByCountry: Record<Country, {
   color: string;
   website: string;
   products: Array<{ name: string; icon: React.ReactNode; desc: string }>;
-}> = {
+} | null> = {
   CI: {
     company: "Leadway Assurance",
     description: "Assurance de confiance en Côte d'Ivoire",
@@ -110,6 +113,7 @@ const featuredByCountry: Record<Country, {
       { name: "Commerce", icon: <Package className="h-5 w-5" />, desc: "Crédits commerce" },
     ],
   },
+  SN: null, // No featured content for Senegal yet
 };
 
 export default function PublicPaymentPage() {
@@ -150,7 +154,7 @@ export default function PublicPaymentPage() {
         const countryCode = data.country_code;
         
         // Check if detected country is in our supported list
-        if (countryCode === "GN" || countryCode === "CI") {
+        if (countryCode === "GN" || countryCode === "CI" || countryCode === "SN") {
           setSelectedCountry(countryCode as Country);
         }
         // Default to GN if not in supported countries
@@ -644,7 +648,7 @@ export default function PublicPaymentPage() {
           )}
           
           {/* Featured Section - Dynamic by country */}
-          {!selectedBiller && !selectedCategory && (
+          {!selectedBiller && !selectedCategory && featuredByCountry[selectedCountry] && (
             <div className="space-y-4">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-foreground mb-1">
@@ -656,7 +660,7 @@ export default function PublicPaymentPage() {
               </div>
               
               {(() => {
-                const featured = featuredByCountry[selectedCountry];
+                const featured = featuredByCountry[selectedCountry]!;
                 const colorClass = selectedCountry === "CI" ? "emerald" : "amber";
                 
                 return (

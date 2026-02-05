@@ -55,7 +55,7 @@ const PREDEFINED_CURRENCIES = [
 const billerSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   code: z.string().min(2, "Le code doit contenir au moins 2 caractères"),
-  category: z.enum(["ELECTRICITY", "WATER", "INTERNET", "PHONE", "TV", "OTHER"]),
+  category: z.enum(["ELECTRICITY", "WATER", "INTERNET", "PHONE", "TV", "AIRTIME", "OTHER"]),
   description: z.string().optional(),
   isActive: z.boolean(),
   supportedCurrencies: z.array(z.string()).min(1, "Sélectionnez au moins une devise"),
@@ -294,7 +294,7 @@ function EditBillerDialog({ biller, onClose }: {
     _id: Id<"billers">;
     name: string;
     code: string;
-    category: "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "OTHER";
+    category: "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "AIRTIME" | "OTHER";
     description?: string;
     isActive: boolean;
     supportedCurrencies: string[];
@@ -474,6 +474,7 @@ function EditBillerDialog({ biller, onClose }: {
                     <SelectItem value="INTERNET">Internet</SelectItem>
                     <SelectItem value="PHONE">Téléphone</SelectItem>
                     <SelectItem value="TV">Télévision</SelectItem>
+                    <SelectItem value="AIRTIME">Recharge Mobile</SelectItem>
                     <SelectItem value="OTHER">Autre</SelectItem>
                   </SelectContent>
                 </Select>
@@ -813,6 +814,7 @@ function CreateBillerDialog() {
                       <SelectItem value="INTERNET">Internet</SelectItem>
                       <SelectItem value="PHONE">Téléphone</SelectItem>
                       <SelectItem value="TV">Télévision</SelectItem>
+                      <SelectItem value="AIRTIME">Recharge Mobile</SelectItem>
                       <SelectItem value="OTHER">Autre</SelectItem>
                     </SelectContent>
                   </Select>
