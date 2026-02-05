@@ -6,6 +6,7 @@ import LanguageSwitcher from "./ui/language-switcher.tsx";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import Footer from "./footer.tsx";
+import { Link } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -17,7 +18,8 @@ export default function DashboardLayout({
   title,
 }: DashboardLayoutProps) {
   const { user, signoutRedirect } = useAuth();
-  const { t } = useTranslation("common");
+  const { t, i18n } = useTranslation("common");
+  const currentLang = i18n.language || "fr";
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,10 +27,10 @@ export default function DashboardLayout({
       <nav className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+            <Link to={`/${currentLang}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <img src="/sarali-logo.png" alt="Sarali" className="h-8 w-8 object-contain" />
               <span className="text-xl font-bold">{t("app.name")}</span>
-            </div>
+            </Link>
             <div className="h-6 w-px bg-border" />
             <h1 className="text-lg font-semibold">{title}</h1>
           </div>
