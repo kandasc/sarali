@@ -45,12 +45,13 @@ const paymentSchema = z.object({
 
 type PaymentForm = z.infer<typeof paymentSchema>;
 
-type BillCategory = "ELECTRICITY" | "WATER" | "INTERNET" | "TV" | "AIRTIME" | "INSURANCE" | "OTHER";
+type BillCategory = "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "AIRTIME" | "INSURANCE" | "OTHER";
 
 const categoryIcons: Record<BillCategory, React.ReactNode> = {
   ELECTRICITY: <Zap className="h-8 w-8" />,
   WATER: <Droplet className="h-8 w-8" />,
   INTERNET: <Wifi className="h-8 w-8" />,
+  PHONE: <Phone className="h-8 w-8" />,
   TV: <Tv className="h-8 w-8" />,
   AIRTIME: <Smartphone className="h-8 w-8" />,
   INSURANCE: <Shield className="h-8 w-8" />,
@@ -61,6 +62,7 @@ const categoryLabels: Record<BillCategory, string> = {
   ELECTRICITY: "Électricité",
   WATER: "Eau",
   INTERNET: "Internet",
+  PHONE: "Téléphone",
   TV: "Télévision",
   AIRTIME: "Recharge Mobile",
   INSURANCE: "Assurance",

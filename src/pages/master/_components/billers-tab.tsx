@@ -294,7 +294,7 @@ function EditBillerDialog({ biller, onClose }: {
     _id: Id<"billers">;
     name: string;
     code: string;
-    category: "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "AIRTIME" | "OTHER";
+    category: "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "AIRTIME" | "INSURANCE" | "OTHER";
     description?: string;
     isActive: boolean;
     supportedCurrencies: string[];
