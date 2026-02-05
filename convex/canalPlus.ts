@@ -185,11 +185,17 @@ export const checkDecoder = action({
   }> => {
     try {
       const isProd = args.isProduction || false;
+      console.log(`[Canal+ checkDecoder] Mode: ${isProd ? "PRODUCTION" : "TEST"}, Decoder: ${args.decoderNumber}`);
+      
       const token = await getAuthToken(isProd);
+      console.log(`[Canal+ checkDecoder] Auth token obtained successfully`);
+      
       const config = getConfig(isProd);
+      const url = `${config.baseUrl}/securecanal/api/check-decoder?numAbonne=${args.decoderNumber}`;
+      console.log(`[Canal+ checkDecoder] Calling: ${url}`);
       
       const response = await fetchWithRetry(
-        `${config.baseUrl}/securecanal/api/check-decoder?numAbonne=${args.decoderNumber}`,
+        url,
         {
           method: "POST",
           headers: {
@@ -199,14 +205,17 @@ export const checkDecoder = action({
         }
       );
       
+      console.log(`[Canal+ checkDecoder] Response status: ${response.status}`);
+      
       if (!response.ok) {
         const errorText = await response.text();
+        console.log(`[Canal+ checkDecoder] Error response: ${errorText}`);
         
         // Provide user-friendly error messages
         if (response.status >= 500) {
           return {
             success: false,
-            error: "Le serveur Canal+ est temporairement indisponible. Veuillez réessayer.",
+            error: `Le serveur Canal+ est temporairement indisponible (${response.status}). Veuillez réessayer.`,
           };
         }
         
