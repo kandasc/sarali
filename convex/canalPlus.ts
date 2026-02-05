@@ -12,8 +12,8 @@ const CANAL_PLUS_CONFIG = {
   TEST: {
     baseUrl: "http://162.19.114.155:8088",
     credentials: {
-      email: "guidipress01@gmail.com",
-      password: "manager2711",
+      email: "external-api@creditruralgn.com",
+      password: "external2711@!",
     },
   },
   PRODUCTION: {
@@ -112,13 +112,22 @@ async function getAuthToken(isProduction: boolean): Promise<string> {
   
   const data = await response.json();
   console.log(`[Canal+ Auth] Login response keys: ${Object.keys(data).join(", ")}`);
-  console.log(`[Canal+ Auth] Token preview: ${data.accessToken?.substring(0, 50)}...`);
+  
+  // Extract token from response - the API returns it in data.access_token
+  const accessToken = data.data?.access_token || data.access_token || data.accessToken;
+  console.log(`[Canal+ Auth] Token preview: ${accessToken?.substring(0, 50)}...`);
+  
+  if (!accessToken) {
+    console.log(`[Canal+ Auth] Full response: ${JSON.stringify(data)}`);
+    throw new Error("No access token in response");
+  }
   
   // Cache the token (separate for test/prod)
+  // Default to 1 hour expiry if not provided
   const newToken = {
-    accessToken: data.accessToken,
-    refreshToken: data.refreshToken,
-    expiresAt: Date.now() + (data.expiresIn * 1000),
+    accessToken: accessToken,
+    refreshToken: data.data?.refresh_token || data.refresh_token || data.refreshToken || "",
+    expiresAt: Date.now() + ((data.data?.expires_in || data.expires_in || data.expiresIn || 3600) * 1000),
   };
   
   if (isProduction) {
@@ -127,7 +136,7 @@ async function getAuthToken(isProduction: boolean): Promise<string> {
     cachedTokenTest = newToken;
   }
   
-  return data.accessToken;
+  return accessToken;
 }
 
 // Helper to get config based on environment
