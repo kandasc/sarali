@@ -372,10 +372,26 @@ export const getPackageDetails = action({
       }
       
       const data = await response.json();
+      console.log(`[Canal+ getPackageDetails] Raw response keys: ${Object.keys(data).join(", ")}`);
+      console.log(`[Canal+ getPackageDetails] Raw response: ${JSON.stringify(data).substring(0, 500)}`);
+      
+      // Normalize the response structure - handle both direct data and nested data.data
+      const rawDetails = data.data || data;
+      
+      // Extract options and periods, ensuring they are arrays
+      const options = Array.isArray(rawDetails.options) ? rawDetails.options : [];
+      const periods = Array.isArray(rawDetails.periods) ? rawDetails.periods : [];
+      
+      console.log(`[Canal+ getPackageDetails] Normalized options: ${JSON.stringify(options)}`);
+      console.log(`[Canal+ getPackageDetails] Normalized periods: ${JSON.stringify(periods)}`);
       
       return {
         success: true,
-        packageDetails: data,
+        packageDetails: {
+          packageId: args.packageId,
+          options: options,
+          periods: periods,
+        },
       };
     } catch (error) {
       return {

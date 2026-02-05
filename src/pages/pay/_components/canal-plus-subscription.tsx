@@ -221,12 +221,14 @@ export default function CanalPlusSubscription({
   const getSelectedPrice = (): number => {
     if (!packageDetails || !selectedDuration) return 0;
     
-    const period = packageDetails.periods.find((p) => p.duration.includes(selectedDuration));
+    const periods = packageDetails.periods || [];
+    const period = periods.find((p) => p.duration?.includes(selectedDuration));
     let totalPrice = period ? parsePrice(period.price) : 0;
     
     // Add option price if selected
     if (selectedOption) {
-      const option = packageDetails.options.find((o) => o.name === selectedOption);
+      const options = packageDetails.options || [];
+      const option = options.find((o) => o.name === selectedOption);
       if (option) {
         totalPrice += parsePrice(option.price);
       }
@@ -497,13 +499,13 @@ export default function CanalPlusSubscription({
             <div className="space-y-3">
               <Label>Durée de l'abonnement *</Label>
               <div className="grid grid-cols-2 gap-3">
-                {packageDetails.periods.map((period, idx) => {
-                  const durationMatch = period.duration.match(/(\d+)/);
+                {(packageDetails.periods || []).map((period, idx) => {
+                  const durationMatch = period.duration?.match(/(\d+)/);
                   const duration = durationMatch ? durationMatch[1] : String(idx + 1);
                   
                   return (
                     <button
-                      key={period.duration}
+                      key={period.duration || idx}
                       onClick={() => setSelectedDuration(duration)}
                       className={cn(
                         "p-4 rounded-lg border-2 text-center transition-all",
@@ -524,11 +526,11 @@ export default function CanalPlusSubscription({
             </div>
             
             {/* Options Selection */}
-            {packageDetails.options.length > 0 && (
+            {(packageDetails.options || []).length > 0 && (
               <div className="space-y-3">
                 <Label>Options supplémentaires (optionnel)</Label>
                 <div className="space-y-2">
-                  {packageDetails.options.map((option) => (
+                  {(packageDetails.options || []).map((option) => (
                     <button
                       key={option.name}
                       onClick={() => setSelectedOption(
