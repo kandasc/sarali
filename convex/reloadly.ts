@@ -192,31 +192,57 @@ export const makeTopup = action({
       // Clean phone number - remove all non-digit characters
       let cleanPhone = args.phoneNumber.replace(/\D/g, "");
       
-      // Remove leading zeros (trunk prefix)
-      cleanPhone = cleanPhone.replace(/^0+/, "");
+      // Country-specific phone number handling
+      // Côte d'Ivoire: Numbers are 10 digits starting with 0 (07, 05, 01, etc.)
+      // Guinea: Numbers are 9 digits starting with 6
+      // Senegal: Numbers are 9 digits starting with 7
       
-      // If phone already has the country prefix, remove it to avoid duplication
-      if (cleanPhone.startsWith(prefix)) {
-        cleanPhone = cleanPhone.substring(prefix.length);
-      }
-      
-      // Validate phone number length based on country
-      const expectedLengths: Record<string, number> = {
-        GN: 9,  // Guinea: 6XX XXX XXX
-        CI: 10, // Côte d'Ivoire: XX XX XX XX XX (after removing leading 0)
-        SN: 9,  // Senegal: 7X XXX XX XX
-      };
-      
-      // Côte d'Ivoire numbers without the leading 0 are typically 9 digits
-      // But some can be 10, so we'll accept 8-10 digits
-      const minLength = 8;
-      const maxLength = 10;
-      
-      if (cleanPhone.length < minLength || cleanPhone.length > maxLength) {
-        return { 
-          success: false, 
-          error: `Invalid phone number length: ${cleanPhone.length} digits. Expected ${minLength}-${maxLength} digits.` 
-        };
+      if (args.countryCode === "CI") {
+        // Côte d'Ivoire: Keep the leading 0, it's part of the number
+        // Format: 0X XX XX XX XX (10 digits)
+        // If user entered without leading 0, add it for common prefixes
+        if (cleanPhone.length === 9 && /^[157]/.test(cleanPhone)) {
+          cleanPhone = "0" + cleanPhone;
+        }
+        // Remove country code if accidentally included
+        if (cleanPhone.startsWith("225")) {
+          cleanPhone = cleanPhone.substring(3);
+        }
+        // Validate: should be 10 digits starting with 0
+        if (cleanPhone.length !== 10) {
+          return { 
+            success: false, 
+            error: `Numéro invalide pour la Côte d'Ivoire. Attendu: 10 chiffres (ex: 07 XX XX XX XX). Reçu: ${cleanPhone.length} chiffres.` 
+          };
+        }
+      } else if (args.countryCode === "GN") {
+        // Guinea: Remove leading zeros (trunk prefix), numbers start with 6
+        cleanPhone = cleanPhone.replace(/^0+/, "");
+        // Remove country code if accidentally included
+        if (cleanPhone.startsWith("224")) {
+          cleanPhone = cleanPhone.substring(3);
+        }
+        // Validate: should be 9 digits starting with 6
+        if (cleanPhone.length !== 9) {
+          return { 
+            success: false, 
+            error: `Numéro invalide pour la Guinée. Attendu: 9 chiffres (ex: 6XX XXX XXX). Reçu: ${cleanPhone.length} chiffres.` 
+          };
+        }
+      } else if (args.countryCode === "SN") {
+        // Senegal: Remove leading zeros, numbers start with 7
+        cleanPhone = cleanPhone.replace(/^0+/, "");
+        // Remove country code if accidentally included
+        if (cleanPhone.startsWith("221")) {
+          cleanPhone = cleanPhone.substring(3);
+        }
+        // Validate: should be 9 digits starting with 7
+        if (cleanPhone.length !== 9) {
+          return { 
+            success: false, 
+            error: `Numéro invalide pour le Sénégal. Attendu: 9 chiffres (ex: 7X XXX XX XX). Reçu: ${cleanPhone.length} chiffres.` 
+          };
+        }
       }
       
       // Build the full international phone number (E.164 without +)

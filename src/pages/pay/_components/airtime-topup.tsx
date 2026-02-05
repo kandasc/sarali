@@ -50,10 +50,10 @@ type AirtimeTopupProps = {
   brandPrimaryColor?: string;
 };
 
-const countryPhonePrefixes: Record<Country, { prefix: string; flag: string; length: number }> = {
-  GN: { prefix: "+224", flag: "🇬🇳", length: 9 },
-  CI: { prefix: "+225", flag: "🇨🇮", length: 10 },
-  SN: { prefix: "+221", flag: "🇸🇳", length: 9 },
+const countryPhonePrefixes: Record<Country, { prefix: string; flag: string; length: number; placeholder: string }> = {
+  GN: { prefix: "+224", flag: "🇬🇳", length: 9, placeholder: "6XX XXX XXX" },
+  CI: { prefix: "+225", flag: "🇨🇮", length: 10, placeholder: "07 XX XX XX XX" },
+  SN: { prefix: "+221", flag: "🇸🇳", length: 9, placeholder: "7X XXX XX XX" },
 };
 
 export default function AirtimeTopup({
@@ -403,7 +403,7 @@ export default function AirtimeTopup({
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="XX XXX XX XX"
+                  placeholder={countryPhonePrefixes[country].placeholder}
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
                   maxLength={countryPhonePrefixes[country].length}
