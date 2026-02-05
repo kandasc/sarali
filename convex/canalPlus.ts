@@ -191,7 +191,8 @@ export const checkDecoder = action({
       console.log(`[Canal+ checkDecoder] Auth token obtained successfully`);
       
       const config = getConfig(isProd);
-      const url = `${config.baseUrl}/securecanal/api/check-decoder`;
+      // Try different endpoint path
+      const url = `${config.baseUrl}/api/check-decoder`;
       console.log(`[Canal+ checkDecoder] Calling: ${url} with numAbonne: ${args.decoderNumber}`);
       
       const response = await fetchWithRetry(
