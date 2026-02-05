@@ -26,6 +26,7 @@ const CANAL_PLUS_CONFIG = {
 };
 
 // Token cache - separate for test and production
+// Reset on each deploy to ensure fresh tokens
 let cachedTokenTest: { accessToken: string; refreshToken: string; expiresAt: number } | null = null;
 let cachedTokenProd: { accessToken: string; refreshToken: string; expiresAt: number } | null = null;
 
@@ -94,6 +95,7 @@ async function getAuthToken(isProduction: boolean): Promise<string> {
   }
   
   // Get new token via full login
+  console.log(`[Canal+ Auth] Logging in with email: ${config.credentials.email}`);
   const response = await fetch(`${config.baseUrl}/auth/login`, {
     method: "POST",
     headers: {
@@ -104,10 +106,13 @@ async function getAuthToken(isProduction: boolean): Promise<string> {
   
   if (!response.ok) {
     const errorText = await response.text();
+    console.log(`[Canal+ Auth] Login failed: ${response.status} - ${errorText}`);
     throw new Error(`Canal+ auth failed: ${response.status} - ${errorText}`);
   }
   
   const data = await response.json();
+  console.log(`[Canal+ Auth] Login response keys: ${Object.keys(data).join(", ")}`);
+  console.log(`[Canal+ Auth] Token preview: ${data.accessToken?.substring(0, 50)}...`);
   
   // Cache the token (separate for test/prod)
   const newToken = {
