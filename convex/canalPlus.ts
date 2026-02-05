@@ -444,7 +444,7 @@ export const processReabonnement = action({
       };
       
       const response = await fetch(
-        `${config.baseUrl}/api/reabo/reabonnement`,
+        `${config.baseUrl}/securecanal/api/reabonnement`,
         {
           method: "POST",
           headers: {
