@@ -177,22 +177,50 @@ export const makeTopup = action({
       const accessToken = await getAccessToken(isProduction);
       const baseUrl = getBaseUrl(isProduction);
 
-      // Clean phone number - remove spaces and leading zeros
-      let cleanPhone = args.phoneNumber.replace(/\s+/g, "").replace(/^0+/, "");
-      
-      // If phone starts with country code, remove it
+      // Country phone prefixes for E.164 format
       const countryPrefixes: Record<string, string> = {
         GN: "224",
         CI: "225",
         SN: "221",
       };
+      
       const prefix = countryPrefixes[args.countryCode];
-      if (prefix && cleanPhone.startsWith(prefix)) {
+      if (!prefix) {
+        return { success: false, error: `Unsupported country code: ${args.countryCode}` };
+      }
+
+      // Clean phone number - remove all non-digit characters
+      let cleanPhone = args.phoneNumber.replace(/\D/g, "");
+      
+      // Remove leading zeros (trunk prefix)
+      cleanPhone = cleanPhone.replace(/^0+/, "");
+      
+      // If phone already has the country prefix, remove it to avoid duplication
+      if (cleanPhone.startsWith(prefix)) {
         cleanPhone = cleanPhone.substring(prefix.length);
       }
-      if (cleanPhone.startsWith("+")) {
-        cleanPhone = cleanPhone.substring(1);
+      
+      // Validate phone number length based on country
+      const expectedLengths: Record<string, number> = {
+        GN: 9,  // Guinea: 6XX XXX XXX
+        CI: 10, // Côte d'Ivoire: XX XX XX XX XX (after removing leading 0)
+        SN: 9,  // Senegal: 7X XXX XX XX
+      };
+      
+      // Côte d'Ivoire numbers without the leading 0 are typically 9 digits
+      // But some can be 10, so we'll accept 8-10 digits
+      const minLength = 8;
+      const maxLength = 10;
+      
+      if (cleanPhone.length < minLength || cleanPhone.length > maxLength) {
+        return { 
+          success: false, 
+          error: `Invalid phone number length: ${cleanPhone.length} digits. Expected ${minLength}-${maxLength} digits.` 
+        };
       }
+      
+      // Build the full international phone number (E.164 without +)
+      const fullPhoneNumber = prefix + cleanPhone;
 
       const requestBody = {
         operatorId: args.operatorId,
@@ -201,7 +229,7 @@ export const makeTopup = action({
         customIdentifier: args.customIdentifier || `sarali-topup-${Date.now()}`,
         recipientPhone: {
           countryCode: args.countryCode,
-          number: cleanPhone,
+          number: fullPhoneNumber,
         },
       };
 
