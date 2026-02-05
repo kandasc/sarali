@@ -95,7 +95,7 @@ export default function AirtimeTopup({
       try {
         const result = await getOperators({
           countryCode: country,
-          isProduction: false, // Use sandbox for now
+          isProduction: true, // Use production mode with live credentials
         });
 
         if (result.success && result.operators) {
@@ -194,7 +194,7 @@ export default function AirtimeTopup({
         customerPhone: phoneNumber,
         amount: amount,
         currency: currency,
-        isTest: true, // Sandbox mode
+        isTest: false, // Production mode
       });
 
       // Then make the actual top-up via Reloadly
@@ -204,7 +204,7 @@ export default function AirtimeTopup({
         phoneNumber: phoneNumber,
         countryCode: country,
         useLocalAmount: useLocalAmount,
-        isProduction: false, // Sandbox
+        isProduction: true, // Use production mode
         customIdentifier: paymentRecord.paymentReference,
       });
 
