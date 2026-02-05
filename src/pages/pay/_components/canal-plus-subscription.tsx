@@ -147,13 +147,28 @@ export default function CanalPlusSubscription({
         await loadPackages();
         setStep("packages");
       } else {
-        setError(result.error || "Abonné non trouvé");
-        toast.error(result.error || "Abonné non trouvé");
+        // Handle specific error cases
+        let errorMessage = result.error || "Abonné non trouvé";
+        
+        // Check for server errors (500)
+        if (errorMessage.includes("500") || errorMessage.includes("INTERNAL_SERVER_ERROR")) {
+          errorMessage = "Le serveur Canal+ est temporairement indisponible. Veuillez réessayer dans quelques minutes.";
+        }
+        
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Erreur de vérification";
-      setError(errorMsg);
-      toast.error(errorMsg);
+      const rawError = err instanceof Error ? err.message : "Erreur de vérification";
+      let errorMessage = rawError;
+      
+      // Handle server errors
+      if (rawError.includes("500") || rawError.includes("INTERNAL_SERVER_ERROR")) {
+        errorMessage = "Le serveur Canal+ est temporairement indisponible. Veuillez réessayer dans quelques minutes.";
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsVerifying(false);
     }

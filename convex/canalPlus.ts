@@ -81,6 +81,36 @@ function getConfig(isProduction: boolean) {
   return isProduction ? CANAL_PLUS_CONFIG.PRODUCTION : CANAL_PLUS_CONFIG.TEST;
 }
 
+// Helper for API calls with retry on server errors
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries: number = 2
+): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      // Retry on 500 errors
+      if (response.status >= 500 && attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))); // Exponential backoff
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Network error");
+      if (attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
+  }
+  
+  throw lastError || new Error("Échec de la connexion au serveur");
+}
+
 // Check decoder / subscriber verification
 export const checkDecoder = action({
   args: {
@@ -109,7 +139,7 @@ export const checkDecoder = action({
       const token = await getAuthToken(isProd);
       const config = getConfig(isProd);
       
-      const response = await fetch(
+      const response = await fetchWithRetry(
         `${config.baseUrl}/securecanal/api/check-decoder?numAbonne=${args.decoderNumber}`,
         {
           method: "POST",
@@ -122,6 +152,15 @@ export const checkDecoder = action({
       
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // Provide user-friendly error messages
+        if (response.status >= 500) {
+          return {
+            success: false,
+            error: "Le serveur Canal+ est temporairement indisponible. Veuillez réessayer.",
+          };
+        }
+        
         return {
           success: false,
           error: `Erreur lors de la vérification: ${response.status} - ${errorText}`,
