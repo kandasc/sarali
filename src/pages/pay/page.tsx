@@ -31,6 +31,7 @@ import { SignInButton } from "@/components/ui/signin.tsx";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import AirtimeTopup from "./_components/airtime-topup.tsx";
+import CanalPlusSubscription from "./_components/canal-plus-subscription.tsx";
 
 const paymentSchema = z.object({
   billReference: z.string().min(1, "Référence de facture requise"),
@@ -126,6 +127,7 @@ export default function PublicPaymentPage() {
   const [isDetectingCountry, setIsDetectingCountry] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<BillCategory | null>(null);
   const [showAirtimeFlow, setShowAirtimeFlow] = useState(false);
+  const [showCanalPlusFlow, setShowCanalPlusFlow] = useState(false);
   const [selectedBiller, setSelectedBiller] = useState<{
     id: Id<"billers">;
     name: string;
@@ -232,6 +234,7 @@ export default function PublicPaymentPage() {
     setSelectedCategory(null);
     setSelectedBiller(null);
     setShowAirtimeFlow(false);
+    setShowCanalPlusFlow(false);
     setSearchQuery("");
     setSearchResults(null);
   }, [selectedCountry, setValue]);
@@ -318,10 +321,12 @@ export default function PublicPaymentPage() {
     setSelectedCategory(null);
     setSelectedBiller(null);
     setShowAirtimeFlow(false);
+    setShowCanalPlusFlow(false);
   };
 
   const handleBackToBillers = () => {
     setSelectedBiller(null);
+    setShowCanalPlusFlow(false);
   };
   
   // Handle AI search
@@ -365,6 +370,11 @@ export default function PublicPaymentPage() {
       });
       setSearchQuery("");
       setSearchResults(null);
+      
+      // Check if Canal+ biller to show special flow
+      if (biller.code === "CANAL_PLUS_GN" || biller.code === "CANAL_PLUS_CI" || biller.code === "CANAL_PLUS_SN") {
+        setShowCanalPlusFlow(true);
+      }
     }
   };
   
@@ -469,7 +479,7 @@ export default function PublicPaymentPage() {
           </div>
           
           {/* Country Selector - Dropdown */}
-          {!selectedBiller && !showAirtimeFlow && (
+          {!selectedBiller && !showAirtimeFlow && !showCanalPlusFlow && (
             <div className="flex justify-center">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -510,7 +520,7 @@ export default function PublicPaymentPage() {
           )}
           
           {/* AI Search Bar */}
-          {!selectedBiller && !showAirtimeFlow && (
+          {!selectedBiller && !showAirtimeFlow && !showCanalPlusFlow && (
             <Card className="border-primary/30 shadow-lg">
               <CardContent className="pt-6">
                 <div className="relative">
@@ -652,7 +662,7 @@ export default function PublicPaymentPage() {
           )}
           
           {/* Featured Section - Dynamic by country */}
-          {!selectedBiller && !selectedCategory && !showAirtimeFlow && featuredByCountry[selectedCountry] && (
+          {!selectedBiller && !selectedCategory && !showAirtimeFlow && !showCanalPlusFlow && featuredByCountry[selectedCountry] && (
             <div className="space-y-4">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-foreground mb-1">
@@ -765,7 +775,7 @@ export default function PublicPaymentPage() {
           )}
 
           {/* Step 1: Category Selection */}
-          {!selectedCategory && !showAirtimeFlow && (
+          {!selectedCategory && !showAirtimeFlow && !showCanalPlusFlow && (
             <Card>
               <CardHeader>
                 <CardTitle>Sélectionnez une Catégorie</CardTitle>
@@ -812,6 +822,26 @@ export default function PublicPaymentPage() {
             />
           )}
 
+          {/* Canal+ Subscription Flow */}
+          {showCanalPlusFlow && selectedBiller && (
+            <CanalPlusSubscription
+              country={selectedCountry}
+              currency={countryConfig[selectedCountry].currency}
+              billerId={selectedBiller.id}
+              billerName={selectedBiller.name}
+              billerLogoUrl={selectedBiller.logoUrl}
+              onBack={() => {
+                setShowCanalPlusFlow(false);
+                setSelectedBiller(null);
+              }}
+              onSuccess={(reference) => {
+                const currentLang = location.pathname.split("/")[1];
+                navigate(`/${currentLang}/success?ref=${reference}`);
+              }}
+              brandPrimaryColor={brandPrimaryColor}
+            />
+          )}
+
           {/* Step 2: Biller Selection */}
           {selectedCategory && !selectedBiller && !showAirtimeFlow && (
             <Card>
@@ -847,7 +877,7 @@ export default function PublicPaymentPage() {
                     {billers.map((biller) => (
                       <button
                         key={biller._id}
-                        onClick={() =>
+                        onClick={() => {
                           setSelectedBiller({
                             id: biller._id,
                             name: biller.name,
@@ -855,8 +885,12 @@ export default function PublicPaymentPage() {
                             logoUrl: biller.logoUrl,
                             feePercentage: biller.feePercentage,
                             feeFixed: biller.feeFixed,
-                          })
-                        }
+                          });
+                          // Check if Canal+ biller to show special flow
+                          if (biller.code === "CANAL_PLUS_GN" || biller.code === "CANAL_PLUS_CI" || biller.code === "CANAL_PLUS_SN") {
+                            setShowCanalPlusFlow(true);
+                          }
+                        }}
                         className="flex flex-col items-center gap-3 p-6 rounded-lg border-2 border-muted hover:border-primary hover:bg-primary/5 transition-all"
                       >
                         {biller.logoUrl ? (
@@ -882,7 +916,7 @@ export default function PublicPaymentPage() {
           )}
 
           {/* Step 3: Payment Form */}
-          {selectedBiller && (
+          {selectedBiller && !showCanalPlusFlow && (
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">

@@ -17,6 +17,7 @@ import type * as billerDashboard from "../billerDashboard.js";
 import type * as billerSearch from "../billerSearch.js";
 import type * as billers from "../billers.js";
 import type * as bulkPayments from "../bulkPayments.js";
+import type * as canalPlus from "../canalPlus.js";
 import type * as cashierDashboard from "../cashierDashboard.js";
 import type * as credits from "../credits.js";
 import type * as http from "../http.js";
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   billerSearch: typeof billerSearch;
   billers: typeof billers;
   bulkPayments: typeof bulkPayments;
+  canalPlus: typeof canalPlus;
   cashierDashboard: typeof cashierDashboard;
   credits: typeof credits;
   http: typeof http;
