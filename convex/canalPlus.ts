@@ -191,8 +191,8 @@ export const checkDecoder = action({
       console.log(`[Canal+ checkDecoder] Auth token obtained successfully`);
       
       const config = getConfig(isProd);
-      const url = `${config.baseUrl}/securecanal/api/check-decoder?numAbonne=${args.decoderNumber}`;
-      console.log(`[Canal+ checkDecoder] Calling: ${url}`);
+      const url = `${config.baseUrl}/securecanal/api/check-decoder`;
+      console.log(`[Canal+ checkDecoder] Calling: ${url} with numAbonne: ${args.decoderNumber}`);
       
       const response = await fetchWithRetry(
         url,
@@ -202,6 +202,7 @@ export const checkDecoder = action({
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
           },
+          body: JSON.stringify({ numAbonne: args.decoderNumber }),
         }
       );
       
