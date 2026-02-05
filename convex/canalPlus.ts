@@ -12,8 +12,8 @@ const CANAL_PLUS_CONFIG = {
   TEST: {
     baseUrl: "http://162.19.114.155:8088",
     credentials: {
-      email: "external-api@creditruralgn.com",
-      password: "external2711@!",
+      email: "guidipress01@gmail.com",
+      password: "manager2711",
     },
   },
   PRODUCTION: {
