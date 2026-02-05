@@ -171,6 +171,7 @@ export default defineSchema({
       v.literal("PHONE"),
       v.literal("TV"),
       v.literal("AIRTIME"),
+      v.literal("INSURANCE"),
       v.literal("OTHER")
     ),
     logoStorageId: v.optional(v.id("_storage")),
@@ -199,6 +200,7 @@ export default defineSchema({
       v.literal("PHONE"),
       v.literal("TV"),
       v.literal("AIRTIME"),
+      v.literal("INSURANCE"),
       v.literal("OTHER")
     ),
     provider: v.string(),

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Phone, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, ChevronDown, MapPin, Smartphone } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, MapPin, Smartphone, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -44,15 +44,15 @@ const paymentSchema = z.object({
 
 type PaymentForm = z.infer<typeof paymentSchema>;
 
-type BillCategory = "ELECTRICITY" | "WATER" | "INTERNET" | "PHONE" | "TV" | "AIRTIME" | "OTHER";
+type BillCategory = "ELECTRICITY" | "WATER" | "INTERNET" | "TV" | "AIRTIME" | "INSURANCE" | "OTHER";
 
 const categoryIcons: Record<BillCategory, React.ReactNode> = {
   ELECTRICITY: <Zap className="h-8 w-8" />,
   WATER: <Droplet className="h-8 w-8" />,
   INTERNET: <Wifi className="h-8 w-8" />,
-  PHONE: <Phone className="h-8 w-8" />,
   TV: <Tv className="h-8 w-8" />,
   AIRTIME: <Smartphone className="h-8 w-8" />,
+  INSURANCE: <Shield className="h-8 w-8" />,
   OTHER: <Package className="h-8 w-8" />,
 };
 
@@ -60,9 +60,9 @@ const categoryLabels: Record<BillCategory, string> = {
   ELECTRICITY: "Électricité",
   WATER: "Eau",
   INTERNET: "Internet",
-  PHONE: "Téléphone",
   TV: "Télévision",
   AIRTIME: "Recharge Mobile",
+  INSURANCE: "Assurance",
   OTHER: "Autre",
 };
 
