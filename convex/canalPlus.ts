@@ -375,8 +375,8 @@ export const getPackageDetails = action({
       console.log(`[Canal+ getPackageDetails] Raw response keys: ${Object.keys(data).join(", ")}`);
       console.log(`[Canal+ getPackageDetails] Raw response: ${JSON.stringify(data).substring(0, 500)}`);
       
-      // Normalize the response structure - handle both direct data and nested data.data
-      const rawDetails = data.data || data;
+      // Normalize the response structure - handle nested data.data.packageDetails
+      const rawDetails = data.data?.packageDetails || data.data || data.packageDetails || data;
       
       // Extract options and periods, ensuring they are arrays
       const options = Array.isArray(rawDetails.options) ? rawDetails.options : [];
