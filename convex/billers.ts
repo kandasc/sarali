@@ -335,6 +335,7 @@ export const listActiveBillers = query({
         v.literal("PHONE"),
         v.literal("TV"),
         v.literal("AIRTIME"),
+        v.literal("INSURANCE"),
         v.literal("OTHER")
       )
     ),

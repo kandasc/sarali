@@ -24,6 +24,7 @@ export const initiateBillPayment = mutation({
       v.literal("PHONE"),
       v.literal("TV"),
       v.literal("AIRTIME"),
+      v.literal("INSURANCE"),
       v.literal("OTHER")
     ),
     provider: v.string(),
@@ -222,6 +223,7 @@ export const getBillProviders = query({
       v.literal("PHONE"),
       v.literal("TV"),
       v.literal("AIRTIME"),
+      v.literal("INSURANCE"),
       v.literal("OTHER")
     ),
   },
