@@ -83,7 +83,7 @@ export const createPaymentIntent = action({
           "X-Merchant-ID": merchantId,
         },
         body: JSON.stringify({
-          amount: args.amount, // FCFA/GNF are already in smallest unit (no centimes)
+          amount: args.amount * 100, // SayeleGate expects amount in centimes
           currency: args.currency,
           payment_method_types: ["card", "mobile_money"],
           description: args.description,
