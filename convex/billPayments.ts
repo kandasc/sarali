@@ -124,6 +124,8 @@ export const processBillPayment = mutation({
 
     // If payment has SayeleGate configured, return info for frontend to call action
     if (payment.paymentGateway === "SAYELE_GATE") {
+      console.log(`[processBillPayment] SayeleGate payment - amount: ${payment.amount}, fees: ${payment.fees}, totalAmount: ${payment.totalAmount}, currency: ${payment.currency}`);
+      
       // Mark as processing
       await ctx.db.patch(args.paymentId, {
         status: "PROCESSING",

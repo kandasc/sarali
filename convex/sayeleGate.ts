@@ -75,6 +75,9 @@ export const createPaymentIntent = action({
     }
 
     try {
+      console.log(`[SayeleGate] createPaymentIntent called with amount: ${args.amount}, currency: ${args.currency}, reference: ${args.reference}`);
+      console.log(`[SayeleGate] amount type: ${typeof args.amount}, raw value: ${JSON.stringify(args.amount)}`);
+      
       const response = await fetch(`${SAYELE_GATE_API_URL}/payment-intents`, {
         method: "POST",
         headers: {
@@ -83,7 +86,7 @@ export const createPaymentIntent = action({
           "X-Merchant-ID": merchantId,
         },
         body: JSON.stringify({
-          amount: args.amount * 100, // SayeleGate expects amount in centimes
+          amount: args.amount,
           currency: args.currency,
           payment_method_types: ["card", "mobile_money"],
           description: args.description,
