@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { useClerk, useUser as useClerkUser } from "@clerk/clerk-react";
+import { useClerk, useAuth as useClerkAuth, useUser as useClerkUser } from "@clerk/clerk-react";
 
 type AuthProfile = {
   sub?: string;
@@ -30,10 +30,10 @@ type UseAuthHook = {
 
 export function useAuth(): UseAuthHook {
   const clerk = useClerk();
+  const { getToken, isLoaded: isClerkLoaded, isSignedIn } = useClerkAuth();
   const {
     user: clerkUser,
     isLoaded,
-    isSignedIn,
   } = useClerkUser();
 
   const signinRedirect = useCallback(async () => {
@@ -50,9 +50,13 @@ export function useAuth(): UseAuthHook {
 
   const fetchAccessToken = useCallback(
     // Kept for backward compatibility with any remaining ConvexProviderWithAuth wiring.
-    // The new auth wiring in `src/main.tsx` sets the Clerk token directly.
-    async (_: { forceRefreshToken: boolean }) => null,
-    [],
+    async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+      if (!isClerkLoaded || !isSignedIn) return null;
+      return (
+        (await getToken({ template: "convex", skipCache: forceRefreshToken })) ?? null
+      );
+    },
+    [getToken, isClerkLoaded, isSignedIn],
   );
 
   return useMemo(() => {
@@ -73,8 +77,8 @@ export function useAuth(): UseAuthHook {
 
     return {
       user: mappedUser,
-      isAuthenticated: isLoaded && !!isSignedIn,
-      isLoading: !isLoaded,
+      isAuthenticated: isClerkLoaded && !!isSignedIn,
+      isLoading: !isClerkLoaded,
       error: null,
       signinRedirect,
       signoutRedirect,
@@ -84,8 +88,8 @@ export function useAuth(): UseAuthHook {
   }, [
     clerkUser,
     fetchAccessToken,
-    isLoaded,
     isSignedIn,
+    isClerkLoaded,
     removeUser,
     signoutRedirect,
     signinRedirect,
