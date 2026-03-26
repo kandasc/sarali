@@ -18,18 +18,29 @@ export function PaymentTopNav({
 }: PaymentTopNavProps) {
   const location = useLocation();
   const currentUser = useQuery(api.users.getCurrentUserOrNull);
+  const lang = location.pathname.split("/")[1] || "fr";
+  const homePath = `/${lang}`;
 
   return (
     <nav
       className={`border-b bg-background/80 backdrop-blur-sm print:hidden ${className}`}
     >
       <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
-        <img
-          src={brandLogoUrl ?? "/sayele-logo.png"}
-          alt=""
-          className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-lg shrink-0"
-          decoding="async"
-        />
+        <Link
+          to={homePath}
+          className="flex items-center gap-2 sm:gap-3 min-w-0 rounded-md outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring shrink-0 hover:opacity-90 transition-opacity"
+          aria-label="Sarali — Accueil paiement"
+        >
+          <img
+            src={brandLogoUrl ?? "/sayele-logo.png"}
+            alt=""
+            className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-lg shrink-0"
+            decoding="async"
+          />
+          <span className="text-lg sm:text-xl font-semibold tracking-tight text-foreground truncate">
+            Sarali
+          </span>
+        </Link>
         <div className="flex items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
           <Unauthenticated>
@@ -41,7 +52,6 @@ export function PaymentTopNav({
           <Authenticated>
             {currentUser &&
               (() => {
-                const lang = location.pathname.split("/")[1] || "fr";
                 let dashboardPath = `/${lang}/cashier`;
                 switch (currentUser.role) {
                   case "SUPER_ADMIN":
