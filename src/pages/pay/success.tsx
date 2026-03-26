@@ -67,10 +67,12 @@ export default function PaymentSuccessPage() {
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
         <nav className="border-b bg-background/80 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/sayele-logo.png" alt="SAYELE" className="h-8 w-8 object-contain" />
-              <span className="text-2xl font-bold uppercase tracking-tight">SAYELE</span>
-            </div>
+            <img
+              src="/sayele-logo.png"
+              alt=""
+              className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-lg"
+              decoding="async"
+            />
             <LanguageSwitcher />
           </div>
         </nav>
@@ -113,12 +115,12 @@ export default function PaymentSuccessPage() {
       {/* Header */}
       <nav className="border-b bg-background/80 backdrop-blur-sm print:hidden">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <img src="/sayele-logo.png" alt="SAYELE" className="h-8 w-8 object-contain" />
-            <span className="text-xl sm:text-2xl font-bold uppercase tracking-tight">SAYELE</span>
-            <span className="text-muted-foreground" aria-hidden>•</span>
-            <span className="text-sm sm:text-base text-muted-foreground">Confirmation de paiement</span>
-          </div>
+          <img
+            src="/sayele-logo.png"
+            alt=""
+            className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-lg"
+            decoding="async"
+          />
           <LanguageSwitcher />
         </div>
       </nav>

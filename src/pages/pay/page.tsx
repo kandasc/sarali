@@ -185,7 +185,6 @@ export default function PublicPaymentPage() {
   );
 
   // Default branding
-  const brandName = agencyBranding?.brandName || "SAYELE";
   const brandLogoUrl = agencyBranding?.brandLogoUrl;
   const brandPrimaryColor = agencyBranding?.brandPrimaryColor;
   const brandWebsite = agencyBranding?.brandWebsite;
@@ -387,33 +386,12 @@ export default function PublicPaymentPage() {
       {/* Header */}
       <nav className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {brandLogoUrl ? (
-              <img
-                src={brandLogoUrl}
-                alt={brandName}
-                className="h-8 w-8 object-contain rounded-md"
-              />
-            ) : (
-              <img
-                src="/sayele-logo.png"
-                alt="SAYELE"
-                className="h-8 w-8 object-contain"
-              />
-            )}
-            <span
-              className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-foreground"
-              style={brandPrimaryColor ? { color: brandPrimaryColor } : undefined}
-            >
-              {brandName}
-            </span>
-            <span className="text-muted-foreground text-sm sm:text-base" aria-hidden>
-              •
-            </span>
-            <span className="text-sm sm:text-base text-muted-foreground">
-              {t("app.billPayment", { ns: "common" })}
-            </span>
-          </div>
+          <img
+            src={brandLogoUrl ?? "/sayele-logo.png"}
+            alt=""
+            className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-lg"
+            decoding="async"
+          />
         </div>
       </nav>
 
