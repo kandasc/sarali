@@ -30,6 +30,7 @@ import Footer from "@/components/footer.tsx";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import AirtimeTopup from "./_components/airtime-topup.tsx";
 import CanalPlusSubscription from "./_components/canal-plus-subscription.tsx";
+import { PaymentTopNav } from "./_components/payment-top-nav.tsx";
 
 const paymentSchema = z.object({
   billReference: z.string().min(1, "Référence de facture requise"),
@@ -384,16 +385,7 @@ export default function PublicPaymentPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       {/* Header */}
-      <nav className="border-b bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center">
-          <img
-            src={brandLogoUrl ?? "/sayele-logo.png"}
-            alt=""
-            className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-lg"
-            decoding="async"
-          />
-        </div>
-      </nav>
+      <PaymentTopNav brandLogoUrl={brandLogoUrl} />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12 flex-1">

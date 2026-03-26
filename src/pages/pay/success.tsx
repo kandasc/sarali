@@ -14,8 +14,8 @@ import { CheckCircle, Download, Home } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import LanguageSwitcher from "@/components/ui/language-switcher.tsx";
 import Footer from "@/components/footer.tsx";
+import { PaymentTopNav } from "./_components/payment-top-nav.tsx";
 import { useTranslation } from "react-i18next";
 
 export default function PaymentSuccessPage() {
@@ -65,17 +65,7 @@ export default function PaymentSuccessPage() {
   if (payment === undefined) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <nav className="border-b bg-background/80 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <img
-              src="/sayele-logo.png"
-              alt=""
-              className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-lg"
-              decoding="async"
-            />
-            <LanguageSwitcher />
-          </div>
-        </nav>
+        <PaymentTopNav />
         <div className="container mx-auto px-4 py-12">
           <div className="mx-auto max-w-2xl space-y-4">
             <Skeleton className="h-60 w-full" />
@@ -113,17 +103,7 @@ export default function PaymentSuccessPage() {
       )}
       
       {/* Header */}
-      <nav className="border-b bg-background/80 backdrop-blur-sm print:hidden">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <img
-            src="/sayele-logo.png"
-            alt=""
-            className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-lg"
-            decoding="async"
-          />
-          <LanguageSwitcher />
-        </div>
-      </nav>
+      <PaymentTopNav />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
