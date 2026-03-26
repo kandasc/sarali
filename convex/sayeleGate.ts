@@ -7,8 +7,12 @@ import { internal } from "./_generated/api";
 /** API base: `https://api.sayelepay.com/api/v1` — payment intents: `.../payment-intents`. Override: SAYELE_GATE_API_URL */
 const DEFAULT_SAYELE_GATE_API_URL = "https://api.sayelepay.com/api/v1";
 
-/** Checkout page base (before ?client_secret=…). Override on Convex: SAYELE_GATE_CHECKOUT_URL */
-const DEFAULT_SAYELE_GATE_CHECKOUT_URL = "https://gate.sayelepay.com/checkout";
+/**
+ * Hosted checkout base (query `client_secret` appended unless API returns a full URL).
+ * `gate.sayelepay.com` is not the correct host for current SayelePay — use `pay` or set
+ * `SAYELE_GATE_CHECKOUT_URL` on Convex to the URL given in their docs/dashboard.
+ */
+const DEFAULT_SAYELE_GATE_CHECKOUT_URL = "https://pay.sayelepay.com/checkout";
 
 function sayeleGateApiUrl(): string {
   const base =
@@ -23,6 +27,31 @@ function sayeleGateCheckoutUrl(): string {
   return base.replace(/\/+$/, "");
 }
 
+/** If the API returns an absolute payment URL, use it instead of building one. */
+function checkoutUrlFromApiResponse(body: unknown): string | null {
+  if (!body || typeof body !== "object") return null;
+  const r = body as Record<string, unknown>;
+  const data = r.data as Record<string, unknown> | undefined;
+  const collect = (v: unknown): string | null =>
+    typeof v === "string" && /^https?:\/\//i.test(v) ? v : null;
+
+  const candidates = [
+    collect(r.checkout_url),
+    collect(r.checkoutUrl),
+    collect(r.hosted_checkout_url),
+    collect(r.hosted_url),
+    collect(r.payment_url),
+    collect(r.url),
+    data && collect(data.checkout_url),
+    data && collect(data.checkoutUrl),
+    data && collect(data.hosted_checkout_url),
+    data && collect(data.hosted_url),
+    data && collect(data.payment_url),
+    data && collect(data.url),
+  ];
+  return candidates.find((u): u is string => u !== null) ?? null;
+}
+
 type PaymentIntentResponse = {
   // Response can be either wrapped or direct
   success?: boolean;
@@ -30,11 +59,17 @@ type PaymentIntentResponse = {
     id: string;
     client_secret: string;
     status: string;
+    checkout_url?: string;
+    checkoutUrl?: string;
+    url?: string;
+    hosted_url?: string;
+    payment_url?: string;
   };
   // Or direct fields
   id?: string;
   client_secret?: string;
   status?: string;
+  checkout_url?: string;
   error?: {
     code: string;
     message: string;
@@ -164,9 +199,18 @@ export const createPaymentIntent = action({
         };
       }
 
-      // Construct checkout URL using client_secret
-      const checkoutUrl = `${sayeleGateCheckoutUrl()}?client_secret=${encodeURIComponent(clientSecret)}`;
-      console.log("Constructed checkout URL:", checkoutUrl);
+      const fromApi = checkoutUrlFromApiResponse(result);
+      const secretParam =
+        process.env.SAYELE_GATE_CHECKOUT_SECRET_PARAM?.trim() || "client_secret";
+      const checkoutUrl =
+        fromApi ??
+        `${sayeleGateCheckoutUrl()}?${secretParam}=${encodeURIComponent(clientSecret)}`;
+      console.log(
+        fromApi
+          ? "SayelePay checkout URL from API response"
+          : "Constructed checkout URL:",
+        checkoutUrl,
+      );
 
       // Update the payment record with gateway info
       await ctx.runMutation(internal.sayeleGateMutations.updatePaymentGatewayInfo, {
