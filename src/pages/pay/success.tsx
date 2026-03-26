@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useSearchParams, Link, useLocation } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
@@ -10,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { CheckCircle, Download, Home } from "lucide-react";
+import { CheckCircle, Download, Home, XCircle, Ban } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -91,7 +90,34 @@ export default function PaymentSuccessPage() {
     );
   }
 
-  const isSuccessful = payment.status === "COMPLETED";
+  const status = payment.status;
+  const isSuccessful = status === "COMPLETED";
+  const isCancelled = status === "CANCELLED";
+  const isFailed = status === "FAILED";
+  const isProcessing =
+    status === "PROCESSING" || status === "PENDING";
+
+  const statusBadgeClass =
+    status === "COMPLETED"
+      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+      : status === "FAILED"
+        ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+        : status === "CANCELLED"
+          ? "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200"
+          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+
+  const statusLabelFr =
+    status === "COMPLETED"
+      ? "Réussi"
+      : status === "FAILED"
+        ? "Échoué"
+        : status === "CANCELLED"
+          ? "Annulé"
+          : status === "PROCESSING"
+            ? "En traitement"
+            : status === "PENDING"
+              ? "En attente"
+              : status;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -113,7 +139,11 @@ export default function PaymentSuccessPage() {
             className={
               isSuccessful
                 ? "border-green-200 bg-green-50 dark:bg-green-950"
-                : "border-orange-200 bg-orange-50 dark:bg-orange-950"
+                : isCancelled
+                  ? "border-slate-300 bg-slate-50 dark:bg-slate-950 dark:border-slate-700"
+                  : isFailed
+                    ? "border-red-200 bg-red-50 dark:bg-red-950"
+                    : "border-orange-200 bg-orange-50 dark:bg-orange-950"
             }
           >
             <CardContent className="pt-6">
@@ -122,25 +152,46 @@ export default function PaymentSuccessPage() {
                   className={`rounded-full p-4 ${
                     isSuccessful
                       ? "bg-green-100 dark:bg-green-900"
-                      : "bg-orange-100 dark:bg-orange-900"
+                      : isCancelled
+                        ? "bg-slate-200 dark:bg-slate-800"
+                        : isFailed
+                          ? "bg-red-100 dark:bg-red-900"
+                          : "bg-orange-100 dark:bg-orange-900"
                   }`}
                 >
-                  <CheckCircle
-                    className={`h-12 w-12 ${
-                      isSuccessful
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-orange-600 dark:text-orange-400"
-                    }`}
-                  />
+                  {isSuccessful ? (
+                    <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
+                  ) : isCancelled ? (
+                    <Ban className="h-12 w-12 text-slate-700 dark:text-slate-300" />
+                  ) : isFailed ? (
+                    <XCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
+                  ) : (
+                    <CheckCircle className="h-12 w-12 text-orange-600 dark:text-orange-400" />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold">
-                    {isSuccessful ? "Paiement Réussi !" : "Paiement en Traitement"}
+                    {isSuccessful
+                      ? "Paiement Réussi !"
+                      : isCancelled
+                        ? "Paiement annulé"
+                        : isFailed
+                          ? "Paiement échoué"
+                          : isProcessing
+                            ? "Paiement en traitement"
+                            : "Statut du paiement"}
                   </h1>
                   <p className="text-muted-foreground">
                     {isSuccessful
                       ? "Votre paiement a été traité avec succès"
-                      : "Votre paiement est en cours de traitement"}
+                      : isCancelled
+                        ? "Ce paiement a été annulé. Aucun débit n’a été effectué."
+                        : isFailed
+                          ? payment.errorMessage ||
+                            "Le paiement n’a pas pu être finalisé."
+                          : isProcessing
+                            ? "Votre paiement est en cours de traitement"
+                            : "Consultez le statut ci-dessous."}
                   </p>
                 </div>
               </div>
@@ -208,15 +259,9 @@ export default function PaymentSuccessPage() {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Statut</p>
                   <span
-                    className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                      payment.status === "COMPLETED"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                        : payment.status === "FAILED"
-                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                    }`}
+                    className={`inline-block px-2 py-1 rounded text-xs font-medium ${statusBadgeClass}`}
                   >
-                    {payment.status}
+                    {statusLabelFr}
                   </span>
                 </div>
               </div>
