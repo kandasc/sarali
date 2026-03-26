@@ -1,32 +1,95 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { useAuth as useOidcAuth } from "react-oidc-context";
+import { useClerk, useUser as useClerkUser } from "@clerk/clerk-react";
+
+type AuthProfile = {
+  sub?: string;
+  name?: string;
+  email?: string;
+  picture?: string;
+};
+
+type AuthUser = {
+  profile: AuthProfile;
+  id_token?: string;
+};
+
+type AuthError = {
+  message: string;
+};
 
 type UseAuthHook = {
-  fetchAccessToken: (args: {
-    forceRefreshToken: boolean;
-  }) => Promise<string | null>;
-} & ReturnType<typeof useOidcAuth>;
+  fetchAccessToken: (args: { forceRefreshToken: boolean }) => Promise<string | null>;
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error?: AuthError | null;
+  signinRedirect: () => Promise<void>;
+  signoutRedirect: () => Promise<void>;
+  removeUser: () => Promise<void>;
+};
 
 export function useAuth(): UseAuthHook {
-  const oidcAuth = useOidcAuth();
+  const clerk = useClerk();
+  const {
+    user: clerkUser,
+    isLoaded,
+    isSignedIn,
+  } = useClerkUser();
 
-  const idToken = oidcAuth.user?.id_token;
+  const signinRedirect = useCallback(async () => {
+    await clerk.openSignIn();
+  }, [clerk]);
+
+  const signoutRedirect = useCallback(async () => {
+    await clerk.signOut({ redirectUrl: "/" });
+  }, [clerk]);
+
+  const removeUser = useCallback(async () => {
+    await signoutRedirect();
+  }, [signoutRedirect]);
+
   const fetchAccessToken = useCallback(
-    // eslint-disable-next-line no-empty-pattern
-    async ({}: { forceRefreshToken: boolean }) => {
-      // TODO: refresh token if needed
-      return idToken ?? null;
-    },
-    [idToken],
+    // Kept for backward compatibility with any remaining ConvexProviderWithAuth wiring.
+    // The new auth wiring in `src/main.tsx` sets the Clerk token directly.
+    async (_: { forceRefreshToken: boolean }) => null,
+    [],
   );
 
-  return useMemo(
-    () => ({
-      ...oidcAuth,
+  return useMemo(() => {
+    const mappedUser: AuthUser | null = clerkUser
+      ? {
+          profile: {
+            sub: clerkUser.id,
+            name: clerkUser.fullName ?? undefined,
+            email:
+              clerkUser.primaryEmailAddress?.emailAddress ??
+              clerkUser.emailAddresses?.[0]?.emailAddress ??
+              undefined,
+            picture: clerkUser.imageUrl ?? undefined,
+          },
+          id_token: undefined,
+        }
+      : null;
+
+    return {
+      user: mappedUser,
+      isAuthenticated: isLoaded && !!isSignedIn,
+      isLoading: !isLoaded,
+      error: null,
+      signinRedirect,
+      signoutRedirect,
+      removeUser,
       fetchAccessToken,
-    }),
-    [oidcAuth, fetchAccessToken],
-  );
+    };
+  }, [
+    clerkUser,
+    fetchAccessToken,
+    isLoaded,
+    isSignedIn,
+    removeUser,
+    signoutRedirect,
+    signinRedirect,
+  ]);
 }
 
 type UseUserProps = {

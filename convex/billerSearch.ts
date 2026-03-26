@@ -25,8 +25,8 @@ export const searchBillersWithAI = action({
     response: string;
   }> => {
     const openai = new OpenAI({
-      baseURL: "http://ai-gateway.hercules.app/v1",
-      apiKey: process.env.HERCULES_API_KEY,
+      baseURL: process.env.AI_API_BASE_URL,
+      apiKey: process.env.AI_API_KEY ?? process.env.HERCULES_API_KEY,
     });
 
     // Get all active billers filtered by country if provided
