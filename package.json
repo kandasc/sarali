@@ -8,6 +8,10 @@
     "preview": "vite preview",
     "build": "tsc -b && vite build",
     "vercel-build": "convex deploy -y --cmd 'pnpm run build' --cmd-url-env-var-name VITE_CONVEX_URL",
+    "convex:import:dev": "convex import snapshot_1774557925089213154.zip -y",
+    "convex:import:prod": "convex import snapshot_1774557925089213154.zip -y --prod",
+    "convex:import:dev:replace": "convex import snapshot_1774557925089213154.zip -y --replace",
+    "convex:import:prod:replace": "convex import snapshot_1774557925089213154.zip -y --replace --prod",
     "lint": "eslint .",
     "prettier-fix": "prettier --write .",
     "prettier-check": "prettier --check ."
