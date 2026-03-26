@@ -1,7 +1,7 @@
 {
   "app.name": "Sarali",
   "app.tagline": "Plateforme d'Agrégation de Services Financiers",
-  "app.billPayment": "Paiement de Factures",
+  "app.billPayment": "Paiement de facture",
   "nav.home": "Accueil",
   "nav.dashboard": "Tableau de bord",
   "nav.reports": "Rapports",

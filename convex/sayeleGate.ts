@@ -4,10 +4,24 @@ import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
-const SAYELE_GATE_API_URL = "https://gate-api.sayele.co/api/v1";
+/** API base: `https://api.sayelepay.com/api/v1` — payment intents: `.../payment-intents`. Override: SAYELE_GATE_API_URL */
+const DEFAULT_SAYELE_GATE_API_URL = "https://api.sayelepay.com/api/v1";
 
-// SayeleGate checkout URL base
-const SAYELE_GATE_CHECKOUT_URL = "https://gate.sayele.co/checkout";
+/** Checkout page base (before ?client_secret=…). Override on Convex: SAYELE_GATE_CHECKOUT_URL */
+const DEFAULT_SAYELE_GATE_CHECKOUT_URL = "https://gate.sayelepay.com/checkout";
+
+function sayeleGateApiUrl(): string {
+  const base =
+    process.env.SAYELE_GATE_API_URL?.trim() || DEFAULT_SAYELE_GATE_API_URL;
+  return base.replace(/\/+$/, "");
+}
+
+function sayeleGateCheckoutUrl(): string {
+  const base =
+    process.env.SAYELE_GATE_CHECKOUT_URL?.trim() ||
+    DEFAULT_SAYELE_GATE_CHECKOUT_URL;
+  return base.replace(/\/+$/, "");
+}
 
 type PaymentIntentResponse = {
   // Response can be either wrapped or direct
@@ -78,7 +92,7 @@ export const createPaymentIntent = action({
       console.log(`[SayeleGate] createPaymentIntent called with amount: ${args.amount}, currency: ${args.currency}, reference: ${args.reference}`);
       console.log(`[SayeleGate] amount type: ${typeof args.amount}, raw value: ${JSON.stringify(args.amount)}`);
       
-      const response = await fetch(`${SAYELE_GATE_API_URL}/payment-intents`, {
+      const response = await fetch(`${sayeleGateApiUrl()}/payment-intents`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -151,7 +165,7 @@ export const createPaymentIntent = action({
       }
 
       // Construct checkout URL using client_secret
-      const checkoutUrl = `${SAYELE_GATE_CHECKOUT_URL}?client_secret=${encodeURIComponent(clientSecret)}`;
+      const checkoutUrl = `${sayeleGateCheckoutUrl()}?client_secret=${encodeURIComponent(clientSecret)}`;
       console.log("Constructed checkout URL:", checkoutUrl);
 
       // Update the payment record with gateway info
@@ -199,7 +213,7 @@ export const checkPaymentStatus = action({
 
     try {
       const response = await fetch(
-        `${SAYELE_GATE_API_URL}/payment-intents/${args.gatewayPaymentId}`,
+        `${sayeleGateApiUrl()}/payment-intents/${args.gatewayPaymentId}`,
         {
           method: "GET",
           headers: {

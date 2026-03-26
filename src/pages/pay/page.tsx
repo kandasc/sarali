@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api.js";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
@@ -20,15 +20,13 @@ import {
 } from "@/components/ui/select.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { Building2, CreditCard, Zap, Droplet, Wifi, Tv, Package, ArrowLeft, LogIn, LayoutDashboard, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, MapPin, Smartphone, Phone } from "lucide-react";
+import { Building2, CreditCard, Zap, Droplet, Wifi, Tv, Package, ArrowLeft, Search, Sparkles, Loader2, Shield, Car, Heart, Plane, Home, GraduationCap, Users, MapPin, Smartphone, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import Footer from "@/components/footer.tsx";
-import { SignInButton } from "@/components/ui/signin.tsx";
-import { Authenticated, Unauthenticated } from "convex/react";
 import { useDebounce } from "@/hooks/use-debounce.ts";
 import AirtimeTopup from "./_components/airtime-topup.tsx";
 import CanalPlusSubscription from "./_components/canal-plus-subscription.tsx";
@@ -174,9 +172,6 @@ export default function PublicPaymentPage() {
     
     detectCountry();
   }, []);
-
-  // Get current user for dashboard link - safe for unauthenticated users
-  const currentUser = useQuery(api.users.getCurrentUserOrNull);
 
   // Check if agencyCode is actually a route (not an agency)
   const isKnownRoute = ["dashboard", "master", "manager", "agency", "cashier", "success"].includes(
@@ -391,68 +386,33 @@ export default function PublicPaymentPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
       {/* Header */}
       <nav className="border-b bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="container mx-auto px-4 py-4 flex items-center">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {brandLogoUrl ? (
               <img
                 src={brandLogoUrl}
                 alt={brandName}
-                className="h-8 w-8 object-contain"
+                className="h-8 w-8 object-contain rounded-md"
               />
             ) : (
-              <img src="/sarali-logo.png" alt="SAYELE" className="h-8 w-8 object-contain" />
+              <img
+                src="/sayele-logo.png"
+                alt="SAYELE"
+                className="h-8 w-8 object-contain"
+              />
             )}
-            <span className="text-2xl font-bold" style={brandPrimaryColor ? { color: brandPrimaryColor } : {}}>
+            <span
+              className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-foreground"
+              style={brandPrimaryColor ? { color: brandPrimaryColor } : undefined}
+            >
               {brandName}
             </span>
-            <span className="ml-2 text-muted-foreground">• {t("app.billPayment", { ns: "common" })}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Unauthenticated>
-              <SignInButton variant="outline" size="sm">
-                <LogIn className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Connexion Agent</span>
-                <span className="sm:hidden">Connexion</span>
-              </SignInButton>
-            </Unauthenticated>
-            <Authenticated>
-              {currentUser && (() => {
-                const lang = location.pathname.split("/")[1] || "fr";
-                let dashboardPath = `/${lang}/cashier`;
-                
-                // Route based on role
-                switch (currentUser.role) {
-                  case "SUPER_ADMIN":
-                    dashboardPath = `/${lang}/superadmin`;
-                    break;
-                  case "MASTER":
-                    dashboardPath = `/${lang}/master`;
-                    break;
-                  case "MANAGER":
-                    dashboardPath = `/${lang}/manager`;
-                    break;
-                  case "CHEF_AGENCE":
-                    dashboardPath = `/${lang}/agency`;
-                    break;
-                  case "CAISSIER":
-                    dashboardPath = `/${lang}/cashier`;
-                    break;
-                  case "BILLER":
-                    dashboardPath = `/${lang}/biller`;
-                    break;
-                }
-                
-                return (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={dashboardPath}>
-                      <LayoutDashboard className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Dashboard</span>
-                      <span className="sm:hidden">Dashboard</span>
-                    </Link>
-                  </Button>
-                );
-              })()}
-            </Authenticated>
+            <span className="text-muted-foreground text-sm sm:text-base" aria-hidden>
+              •
+            </span>
+            <span className="text-sm sm:text-base text-muted-foreground">
+              {t("app.billPayment", { ns: "common" })}
+            </span>
           </div>
         </div>
       </nav>
